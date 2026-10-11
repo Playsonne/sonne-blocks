@@ -7,6 +7,7 @@ import { setupPwa } from './pwa';
 import { BoardGestures } from './gestures';
 import { Preferences, type ControlMode } from './preferences';
 import { Haptics, type HapticEffect } from './haptics';
+import { Sound } from './sound';
 import { formatDuration, type SessionStats } from './session';
 
 const $ = <T extends HTMLElement = HTMLElement>(selector: string): T => document.querySelector<T>(selector)!;
@@ -18,6 +19,7 @@ let welcome = !saved;
 let best = Math.max(store.record(), saved?.score ?? 0);
 let session: SessionStats = store.session ?? { playedMs: 0, recordAtStart: best, completeDuration: !saved };
 const haptics = new Haptics(() => preferences.vibration);
+const sound = new Sound(() => preferences.sound, () => preferences.soundVolume);
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 let lastTime = 0;
 let recordedLocks = 0;
@@ -73,8 +75,10 @@ function sync(effect?: HapticEffect): void {
   document.querySelectorAll<HTMLButtonElement>('[data-action]').forEach(button => { button.disabled = !playing || (button.dataset.action === 'hold' && s.holdUsed); });
   document.documentElement.dataset.gameStatus = welcome ? 'welcome' : s.status;
   if (s.status !== lastStatus) {
+    const finished = lastStatus === 'playing' && s.status === 'over';
     lastStatus = s.status;
     if (!playing) { controls.reset(); gestures.cancel(); stopLineEffects(); }
+    if (finished) sound.play('over');
   }
   if (!playing) {
     $('#game-result').hidden = welcome || s.status !== 'over';
@@ -107,8 +111,8 @@ function sync(effect?: HapticEffect): void {
     recordedLocks = game.locks;
     // A drop that clears lines gets only the line-clear pulse, never two overlapping effects.
     if (playing) {
-      if (game.lastClear) haptics.play('clear');
-      else if (effect === 'drop') haptics.play('drop');
+      if (game.lastClear) { haptics.play('clear'); sound.play('clear', game.lastClear); }
+      else if (effect === 'drop') { haptics.play('drop'); sound.play('drop'); }
     }
     if (game.lastClear && playing) {
       if (preferences.lineAnimation && !reducedMotion.matches) renderer.animateLines(game.lastClearedRows);
@@ -128,18 +132,19 @@ function action(value: Action): void {
   }
 }
 function pause(): void {
-  haptics.stop(); stopLineEffects(); game.pause(); controls.reset(); gestures.cancel(); lastTime = 0; sync(); save();
+  sound.stop(); haptics.stop(); stopLineEffects(); game.pause(); controls.reset(); gestures.cancel(); lastTime = 0; sync(); save();
 }
 function startNew(): void {
-  haptics.stop(); stopLineEffects();
+  sound.stop(); haptics.stop(); stopLineEffects();
   session = { playedMs: 0, recordAtStart: best, completeDuration: true };
   game = new Game(); welcome = false; recordedLocks = 0; controls.reset(); gestures.cancel();
   game.resume(); lastTime = 0; save(); sync();
+  void sound.activate();
   (document.activeElement as HTMLElement | null)?.blur();
 }
 function continuePlay(): void {
   if (welcome || game.state.status === 'over') startNew();
-  else { game.resume(); controls.reset(); gestures.cancel(); lastTime = 0; sync(); (document.activeElement as HTMLElement | null)?.blur(); }
+  else { sound.stop(); game.resume(); controls.reset(); gestures.cancel(); lastTime = 0; sync(); void sound.activate(); (document.activeElement as HTMLElement | null)?.blur(); }
 }
 $('#play').addEventListener('click', continuePlay);
 $('#hold-box').addEventListener('click', event => {
@@ -149,6 +154,7 @@ $('#hold-box').addEventListener('click', event => {
 });
 $('#pause').addEventListener('click', pause);
 function openDialog(selector: string): void {
+  sound.stop();
   gestures.cancel();
   if (game.state.status === 'playing') pause();
   document.querySelectorAll<HTMLDialogElement>('dialog[open]').forEach(dialog => dialog.close());
@@ -172,6 +178,36 @@ $('#vibration').addEventListener('change', () => {
 $('#test-vibration').addEventListener('click', () => {
   if (!haptics.play('clear')) $('#vibration-note').textContent = 'No se pudo activar la vibración. Revisa los ajustes del dispositivo o prueba otro navegador.';
 });
+function renderSound(): void {
+  const enabled = preferences.sound && sound.supported;
+  $<HTMLInputElement>('#sound').checked = preferences.sound;
+  $<HTMLInputElement>('#sound').disabled = !sound.supported;
+  const volume = $<HTMLInputElement>('#sound-volume');
+  volume.disabled = !enabled;
+  volume.value = String(Math.round(preferences.soundVolume * 100));
+  volume.setAttribute('aria-valuetext', `${volume.value} %`);
+  $('#sound-volume-value').textContent = `${volume.value} %`;
+  $<HTMLButtonElement>('#test-sound').disabled = !enabled || preferences.soundVolume === 0;
+  $('#sound-note').textContent = !sound.supported ? 'Este navegador no ofrece sonido. El juego funciona igual.'
+    : preferences.soundVolume === 0 ? 'Volumen a cero. Súbelo para escuchar los efectos.'
+    : 'Efectos breves al dejar caer, completar filas y terminar. Mover y girar no suenan.';
+}
+$('#sound').addEventListener('change', () => {
+  sound.stop();
+  if (!preferences.setSound($<HTMLInputElement>('#sound').checked)) notify('El sonido se mantendrá mientras esté abierto el juego. No se ha podido guardar la preferencia.');
+  renderSound();
+  if (preferences.sound) void sound.activate();
+});
+$('#sound-volume').addEventListener('input', () => {
+  if (!preferences.setSoundVolume(Number($<HTMLInputElement>('#sound-volume').value) / 100)) notify('El volumen se mantendrá mientras esté abierto el juego. No se ha podido guardar la preferencia.');
+  sound.updateVolume(); renderSound();
+});
+$('#test-sound').addEventListener('click', async () => {
+  if (!await sound.preview() && preferences.sound && !document.hidden && $<HTMLDialogElement>('#help-dialog').open) {
+    $('#sound-note').textContent = 'No se pudo reproducir. Revisa el volumen del dispositivo y vuelve a pulsar Probar sonido.';
+  }
+});
+$('#help-dialog').addEventListener('close', () => sound.stop());
 function renderAnimationPreference(): void {
   const enabled = preferences.lineAnimation && !reducedMotion.matches;
   const toggle = $<HTMLInputElement>('#line-animation');
@@ -211,16 +247,16 @@ $('#gesture-dialog').addEventListener('close', () => {
 });
 $('#new-game').addEventListener('click', () => openDialog('#restart-dialog'));
 $('#confirm-restart').addEventListener('click', () => { $<HTMLDialogElement>('#restart-dialog').close(); startNew(); });
-document.querySelectorAll<HTMLElement>('[data-close]').forEach(button => button.addEventListener('click', () => button.closest('dialog')?.close()));
+document.querySelectorAll<HTMLElement>('[data-close]').forEach(button => button.addEventListener('click', () => { sound.stop(); button.closest('dialog')?.close(); }));
 $('.brand').addEventListener('click', event => { event.preventDefault(); pause(); });
 document.addEventListener('visibilitychange', () => { if (document.hidden) pause(); });
-window.addEventListener('blur', () => { haptics.stop(); if (game.state.status === 'playing') pause(); });
+window.addEventListener('blur', () => { sound.stop(); haptics.stop(); if (game.state.status === 'playing') pause(); });
 window.addEventListener('pagehide', pause);
 window.addEventListener('pageshow', () => { game.pause(); lastTime = 0; sync(); });
 function connection(): void { $('#connection').textContent = navigator.onLine ? 'LOCAL · SIN CUENTAS' : 'SIN CONEXIÓN · A JUGAR'; }
 window.addEventListener('online', connection); window.addEventListener('offline', connection); connection();
 setupPwa({ notify, ready: () => { offlineReady = true; storageNotice(); }, prepareUpdate: pause, isPlaying: () => game.state.status === 'playing', installHelp: () => openDialog('#install-dialog') });
-renderControlMode(); renderVibration(); renderAnimationPreference(); sync(); storageNotice();
+renderControlMode(); renderVibration(); renderSound(); renderAnimationPreference(); sync(); storageNotice();
 if (store.corrupted) notify('No se pudo recuperar la partida guardada. Puedes empezar otra.');
 function frame(time: number): void {
   const delta = lastTime ? time - lastTime : 0;

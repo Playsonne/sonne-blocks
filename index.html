@@ -92,6 +92,13 @@
         <label class="setting-toggle"><input type="checkbox" id="line-animation" aria-describedby="line-animation-note" checked /> Animación de filas</label>
         <p class="muted" id="line-animation-note"></p>
       </section>
+      <section class="sound-settings" aria-label="Sonido">
+        <label class="setting-toggle"><input type="checkbox" id="sound" aria-describedby="sound-note" /> Sonido</label>
+        <p class="muted" id="sound-note"></p>
+        <label class="volume-label" for="sound-volume">Volumen <output id="sound-volume-value" for="sound-volume">35 %</output></label>
+        <input type="range" id="sound-volume" min="0" max="100" step="5" value="35" disabled />
+        <button class="text-button" id="test-sound" disabled>Probar sonido</button>
+      </section>
       <p>Con botones, mantén pulsado ←, → o ↓ para repetir. Con gestos, juega con un dedo en cualquier punto del tablero: arrastra a los lados para mover y hacia abajo para bajar; toca la mitad izquierda o derecha para girar hacia ese lado. Desliza rápido y recto hacia abajo para dejar caer al soltar.</p>
       <p>Toca Reserva para guardar o intercambiar una pieza. Puedes hacerlo una vez por pieza. La silueta marca el aterrizaje. El teclado funciona en ambos modos.</p>
       <dl class="instructions"><dt>← / →</dt><dd>Mover a los lados</dd><dt>↓</dt><dd>Bajar más rápido</dd><dt>↑ / X · Z</dt><dd>Girar a la derecha · izquierda</dd><dt>Espacio</dt><dd>Caída instantánea</dd><dt>C</dt><dd>Reservar o intercambiar una pieza</dd><dt>Escape</dt><dd>Pausar la partida</dd></dl>
@@ -101,7 +108,7 @@
         <p id="game-caption" role="status">Tu partida se guarda en este dispositivo</p>
         <p id="last-notice" role="status" hidden></p>
         <button id="install" class="text-button">Instalar el juego <span aria-hidden="true">↗</span></button>
-        <p class="muted">Hecho para desconectar. Sin cuentas, anuncios ni sonido.</p>
+        <p class="muted">Hecho para desconectar. Sin cuentas ni anuncios. Sonido opcional.</p>
       </section>
       <button class="primary" data-close>Entendido</button>
     </dialog>

@@ -1,6 +1,6 @@
 # Sonne Blocks
 
-Un juego de bloques para navegador, hecho con TypeScript, Vite y Canvas 2D. Interfaz en español, diseño oscuro y controles pensados para móvil en vertical. Sin cuentas, servidor de aplicación, anuncios, compras, sonido ni dependencias externas durante el juego.
+Un juego de bloques para navegador, hecho con TypeScript, Vite y Canvas 2D. Interfaz en español, diseño oscuro y controles pensados para móvil en vertical. Sonido opcional, inicialmente apagado. Sin cuentas, servidor de aplicación, anuncios, compras ni dependencias externas durante el juego.
 
 **[Jugar a Sonne Blocks](https://playsonne.github.io/sonne-blocks/)** · Puedes compartir este enlace; no hace falta una cuenta de GitHub.
 
@@ -67,7 +67,7 @@ Al terminar se muestran **puntos, líneas, nivel y tiempo jugado**, con un aviso
 
 En **? → Vibración** puedes activar la respuesta táctil y pulsar **Probar vibración**. Está desactivada por defecto y se recuerda en el dispositivo, independientemente de Botones/Gestos. Una caída instantánea emite un pulso de 12 ms; completar líneas emite dos de 18 y 24 ms separados por 35 ms. Si una caída completa líneas se usa solo este último patrón. Mover y girar no vibran. Pausar, cambiar de aplicación o desactivar la opción cancela los pulsos pendientes.
 
-Se usa la [API de vibración del navegador](https://developer.mozilla.org/en-US/docs/Web/API/Navigator/vibrate): su presencia no garantiza que el dispositivo tenga motor o que sus ajustes permitan vibrar. Si falta, los ajustes lo indican y el juego continúa funcionando. Las pruebas automáticas comprueban las llamadas, su preferencia y sus cancelaciones; la sensación e intensidad reales requieren probarlo en el móvil. El sonido queda para una mejora posterior.
+Se usa la [API de vibración del navegador](https://developer.mozilla.org/en-US/docs/Web/API/Navigator/vibrate): su presencia no garantiza que el dispositivo tenga motor o que sus ajustes permitan vibrar. Si falta, los ajustes lo indican y el juego continúa funcionando. Las pruebas automáticas comprueban las llamadas, su preferencia y sus cancelaciones; la sensación e intensidad reales requieren probarlo en el móvil.
 
 ### Animación opcional de filas (v1.2.1)
 
@@ -76,6 +76,18 @@ En **? → Animación de filas** puedes activar o desactivar un destello con con
 Está activada inicialmente y guarda tu elección sin cambiar Botones/Gestos ni la vibración. Si el sistema solicita **reducir movimiento**, se desactiva y la ayuda explica por qué; al retirar esa preferencia vuelve a respetar tu elección anterior. Con la animación apagada, el aviso de líneas sigue apareciendo como texto estático.
 
 Pausar, abrir la ayuda, pasar a segundo plano, reiniciar, cambiar el tamaño del tablero o fijar otra pieza cancela el efecto anterior. Una nueva eliminación lo sustituye sin acumular animaciones. Solo se conservan copias temporales de las filas eliminadas: no se guardan en la partida ni reaparecen al recuperarla.
+
+### Sonido opcional (v1.3.0)
+
+En **? → Sonido** puedes activar los efectos, ajustar el **volumen entre 0 y 100 %** y pulsar **Probar sonido** para escuchar el acorde de cuatro filas. Empieza apagado y con un volumen del 35 %. Ambos ajustes se guardan por separado de la partida y de los controles, vibración y animación.
+
+- Caída instantánea: golpe corto de unos 100 ms. Movimiento, giro, reserva y fijación natural sin líneas permanecen en silencio.
+- Una fila: nota luminosa; dos y tres: acordes progresivos; cuatro: acorde ascendente de cuatro notas. El efecto completo dura menos de 400 ms.
+- Fin de partida: dos notas descendentes, una sola vez, incluso si termina al reservar. Si la caída elimina filas, suena únicamente el acorde; si acaba la partida, únicamente el cierre.
+
+Los tonos son originales y se sintetizan mediante Web Audio, sin archivos, descargas ni librerías adicionales. Funcionan sin conexión. Cada efecto sustituye al anterior, con un máximo de cuatro voces y envolventes breves de entrada/salida. Pausar, abrir/cerrar la ayuda, reiniciar, desactivar sonido, poner volumen a cero, perder el foco o pasar a segundo plano cancela todas las voces, incluidas las notas programadas que aún no habían empezado.
+
+El contexto de audio solo se crea o reanuda al activar, empezar, continuar o probar, siguiendo la [activación por interacción de Web Audio](https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API/Best_practices). Nunca se reproduce una cola de sonidos antiguos después de conceder permiso. Una API ausente, rechazo o interrupción no bloquea el juego; «Probar sonido» informa si no puede reproducir. Las pruebas verifican señal digital y comportamiento en navegador emulado: el volumen, timbre y salida por el altavoz real necesitan valoración en Android/iOS.
 
 ## Distribución de pantalla
 
@@ -164,6 +176,7 @@ src/controls.ts    Teclado y botones; repetición, multitáctil y cancelación
 src/gestures.ts    Reconocimiento de un dedo, umbrales y adaptación a Pointer Events
 src/preferences.ts  Preferencia Botones/Gestos, separada de la partida
 src/haptics.ts     Vibración opcional y cancelación de pulsos
+src/sound.ts       Síntesis local de efectos, volumen y cancelación de voces
 src/session.ts     Metadatos del resumen y formato del tiempo jugado
 src/render.ts      Tablero, sombra y vistas previas en Canvas 2D
 src/line-animation.ts  Duración y filas temporales del efecto visual

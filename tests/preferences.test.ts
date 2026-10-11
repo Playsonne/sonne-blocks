@@ -45,3 +45,23 @@ it('un ajuste de animación inválido usa el valor inicial y el almacenamiento b
   const prefs = new Preferences({ getItem() { throw Error('blocked'); }, setItem() { throw Error('quota'); } } as unknown as Storage);
   expect(prefs.setLineAnimation(false)).toBe(false); expect(prefs.lineAnimation).toBe(false);
 });
+it('sonido apagado de inicio, volumen moderado y preferencias independientes que sobreviven a recargas', () => {
+  const store = memory('{"version":1,"mode":"gestures","gesturesExplained":true,"vibration":true,"lineAnimation":false}');
+  const prefs = new Preferences(store); expect(prefs.sound).toBe(false); expect(prefs.soundVolume).toBe(.35);
+  prefs.setSound(true); prefs.setSoundVolume(.6);
+  const next = new Preferences(store); expect(next.sound).toBe(true); expect(next.soundVolume).toBe(.6);
+  expect(next.mode).toBe('gestures'); expect(next.vibration).toBe(true); expect(next.lineAnimation).toBe(false);
+  next.set('buttons'); next.setVibration(false); next.setLineAnimation(true);
+  expect(new Preferences(store).sound).toBe(true); expect(new Preferences(store).soundVolume).toBe(.6);
+  next.setSound(false); expect(new Preferences(store).soundVolume).toBe(.6);
+});
+it('valida volumen y funciona en memoria cuando no puede guardar el sonido', () => {
+  for (const value of ['"0.5"', '-1', '2', 'null']) expect(new Preferences(memory(`{"version":1,"soundVolume":${value}}`)).soundVolume).toBe(.35);
+  expect(new Preferences(memory('{"version":1,"sound":"true"}')).sound).toBe(false);
+  const prefs = new Preferences({ getItem() { throw Error('blocked'); }, setItem() { throw Error('quota'); } } as unknown as Storage);
+  expect(prefs.setSound(true)).toBe(false); expect(prefs.sound).toBe(true);
+  expect(prefs.setSoundVolume(.8)).toBe(false); expect(prefs.soundVolume).toBe(.8);
+  prefs.setSoundVolume(NaN); expect(prefs.soundVolume).toBe(.8);
+  prefs.setSoundVolume(-1); expect(prefs.soundVolume).toBe(0);
+  prefs.setSoundVolume(2); expect(prefs.soundVolume).toBe(1);
+});

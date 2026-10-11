@@ -1,5 +1,17 @@
 # Validación de Sonne Blocks
 
+## v1.3.0 · Sonido opcional
+
+Validación del **11 de octubre de 2026**, en Windows y Microsoft Edge mediante Playwright: **98 pruebas unitarias, 90 de navegador y compilación de producción correctas**. Se añaden 13 pruebas unitarias y 20 de navegador; se conservan todas las comprobaciones anteriores. No se modifican el motor, el guardado de partida, el reconocedor de gestos, los controles ni las restricciones táctiles.
+
+- Silencio inicial y ningún contexto de audio antes de una interacción explícita con el sonido activado. Activación, volumen al 35 % inicialmente, control de 0 a 100 %, botón de prueba, preferencias antiguas y persistencia independiente de los otros ajustes. Recarga, prueba y caída con sonido sin conexión.
+- Se instrumenta **Web Audio real** en el navegador: se observan las notas programadas y se analiza la señal digital generada, no solo llamadas a una API simulada. Caída instantánea con un solo golpe en Botones y Gestos; movimientos, giros y reserva sin sonidos. Acordes de una a cuatro filas sin golpe duplicado; eliminación por gravedad y fijación natural sin líneas. Fin de partida con dos notas una sola vez, tanto por caída como por reserva.
+- Cancelación de voces actuales y programadas al pausar, perder foco, ocultar/cerrar la página, cerrar ayuda (botón o Escape), desactivar sonido y poner volumen a cero. Las pruebas unitarias cubren una reanudación pendiente que se cancela antes de obtener permiso, interrupción del contexto, sustitución de efectos, limpieza de nodos, envolventes y amplitud limitada. No se acumulan sonidos antiguos.
+- API ausente y permiso rechazado: la ayuda informa y se puede seguir jugando. Ayuda con 360 × 400 y texto al 200 %: desplazamiento hasta Probar, volumen utilizable con teclado y ausencia de desbordamiento horizontal.
+- [Captura de los ajustes en móvil emulado a 390 × 844](ajuste-sonido.png).
+
+**Estas pruebas no equivalen a escuchar un altavoz físico.** En el Xiaomi 14 y en iPhone/iPad queda por valorar volumen, timbre, latencia percibida, comportamiento con silencio/auriculares y recuperación después de cambiar de aplicación o bloquear la pantalla. No se ha realizado prueba física de audio en Android ni iOS. Referencias de implementación: [activación y buenas prácticas de Web Audio](https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API/Best_practices) y [especificación Web Audio](https://webaudio.github.io/web-audio-api/).
+
 ## v1.2.1 · Animación más visible
 
 El usuario indicó que el efecto de la v1.2.0 apenas se percibía. Se amplía de **260 a 520 ms**, mantiene un destello inicial durante unos **100 ms** y después reduce gradualmente los bloques con pequeños fragmentos de sus colores. El destello se limita a las filas completadas y no se repite. Se conserva la opción de desactivarlo, la reducción de movimiento y la respuesta inmediata de la siguiente pieza.

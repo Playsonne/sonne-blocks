@@ -29,13 +29,15 @@ dialog .primary { margin-top: 12px; }
 .control-mode label:has(:checked) { background: #30432a; border-color: var(--accent); color: var(--accent); }
 .control-mode label:focus-within { outline: 2px solid var(--accent); outline-offset: 3px; }
 .control-mode input { accent-color: var(--accent); margin: 0; flex-shrink: 0; }
-.vibration-settings, .animation-settings { margin-bottom: 20px; padding-bottom: 12px; border-bottom: 1px solid var(--line); }
+.vibration-settings, .animation-settings, .sound-settings { margin-bottom: 20px; padding-bottom: 12px; border-bottom: 1px solid var(--line); }
 .setting-toggle { display: flex; align-items: center; gap: 10px; min-height: 44px; width: fit-content; padding: 8px 12px 8px 0; font-size: .875rem; cursor: pointer; }
 .setting-toggle input { width: 18px; height: 18px; margin: 0; accent-color: var(--accent); }
 .setting-toggle:has(:disabled) { color: var(--muted); cursor: default; }
 .setting-toggle:focus-within { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 4px; }
-.vibration-settings p, .animation-settings p { margin: 4px 0; }
-.vibration-settings .text-button { padding-left: 0; }
+.vibration-settings p, .animation-settings p, .sound-settings p { margin: 4px 0; }
+.vibration-settings .text-button, .sound-settings .text-button { padding-left: 0; }
+.volume-label { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; margin-top: 12px; font-size: .8125rem; }
+#sound-volume { display: block; width: 100%; min-width: 0; min-height: 44px; margin: 0; accent-color: var(--accent); }
 .gesture-instructions { padding-left: 20px; color: #c0cbbf; font-size: .875rem; line-height: 1.6; }
 .gesture-instructions li + li { margin-top: 12px; }
 .gesture-instructions strong { color: #e9ede5; }
