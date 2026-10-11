@@ -128,6 +128,19 @@ kbd { color: #b6c2b8; font: inherit; font-size: .625rem; padding: 2px 4px; borde
 .primary:hover { background: #e2fbb4; }
 .text-button { min-height: 44px; min-width: 44px; padding: 10px; border: 0; background: transparent; color: #c7d4bf; font-size: .8125rem; }
 .board-overlay .text-button { margin-top: 4px; }
+html[data-game-status="over"] .overlay-mark,
+html[data-game-status="over"] #overlay-kicker,
+html[data-game-status="over"] #overlay-description { display: none; }
+html[data-game-status="over"] #overlay-title { margin: 0 0 14px; font-size: 1.375rem; }
+.game-result { width: 100%; max-width: 18rem; }
+.result-stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 8px; margin: 0; }
+.result-stats dt { color: var(--muted); font-size: .75rem; }
+.result-stats dd { margin: 4px 0 0; font-size: 1.25rem; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.result-points, .result-time { grid-column: 1 / -1; }
+.result-points dd { color: var(--accent); font-size: clamp(1.75rem, 5vw, 2.5rem); font-weight: 650; }
+.board-overlay #result-record { margin: 14px 0; line-height: 1.4; }
+.board-overlay #result-record.new-record { color: var(--accent); font-weight: 650; }
+.board-overlay .result-note { margin: 10px 0 0; font-size: .6875rem; line-height: 1.4; }
 html[data-game-status="paused"] .board-overlay { background: #0c131050; }
 html[data-game-status="paused"] .overlay-content { max-width: 18rem; padding: 20px 8px 12px; border: 1px solid #4d5f44; border-radius: 10px; background: #17221bee; box-shadow: 0 8px 32px #0004; }
 html[data-game-status="paused"] .overlay-mark,

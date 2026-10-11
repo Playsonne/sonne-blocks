@@ -61,6 +61,14 @@ La caída suave añade 1 punto por casilla; la instantánea, 2. El nivel aumenta
 
 El juego termina si una pieza nueva o reservada no puede entrar o si una pieza se fija completamente sobre la zona visible. Para reiniciar, pausa y pulsa **Nueva partida**; la confirmación evita sustituirla por accidente. Al terminar puedes **Volver a jugar**.
 
+### Resumen de partida y vibración (v1.1.0)
+
+Al terminar se muestran **puntos, líneas, nivel y tiempo jugado**, con un aviso si superaste el récord que tenías al comenzar. El tiempo cuenta únicamente mientras avanza la partida: excluye pausas, ayuda y segundo plano, y se conserva al guardar y recuperar. «Volver a jugar» inicia una partida con tiempo y puntuación a cero y conserva el récord. Los guardados anteriores siguen siendo válidos; si no contienen duración, el resumen indica que el tiempo corresponde solo al tramo desde la actualización.
+
+En **? → Vibración** puedes activar la respuesta táctil y pulsar **Probar vibración**. Está desactivada por defecto y se recuerda en el dispositivo, independientemente de Botones/Gestos. Una caída instantánea emite un pulso de 12 ms; completar líneas emite dos de 18 y 24 ms separados por 35 ms. Si una caída completa líneas se usa solo este último patrón. Mover y girar no vibran. Pausar, cambiar de aplicación o desactivar la opción cancela los pulsos pendientes.
+
+Se usa la [API de vibración del navegador](https://developer.mozilla.org/en-US/docs/Web/API/Navigator/vibrate): su presencia no garantiza que el dispositivo tenga motor o que sus ajustes permitan vibrar. Si falta, los ajustes lo indican y el juego continúa funcionando. Las pruebas automáticas comprueban las llamadas, su preferencia y sus cancelaciones; la sensación e intensidad reales requieren probarlo en el móvil. La animación de eliminación de filas y el sonido quedan para una mejora posterior.
+
 ## Distribución de pantalla
 
 En móvil, la cabecera compacta da paso a una fila de puntos, récord, nivel y líneas, otra fila con reserva y siguiente, el tablero y los controles. No hay columna lateral. La ayuda **?** reúne la instalación, el estado del guardado y la disponibilidad offline; los avisos importantes siguen apareciendo y también se pueden consultar allí.
@@ -147,6 +155,8 @@ src/game/          Piezas, bolsa, colisiones, SRS, puntuación y reloj
 src/controls.ts    Teclado y botones; repetición, multitáctil y cancelación
 src/gestures.ts    Reconocimiento de un dedo, umbrales y adaptación a Pointer Events
 src/preferences.ts  Preferencia Botones/Gestos, separada de la partida
+src/haptics.ts     Vibración opcional y cancelación de pulsos
+src/session.ts     Metadatos del resumen y formato del tiempo jugado
 src/render.ts      Tablero, sombra y vistas previas en Canvas 2D
 src/persistence.ts Guardado versionado, validación y gestión de errores
 src/pwa.ts         Instalación y aceptación explícita de actualizaciones

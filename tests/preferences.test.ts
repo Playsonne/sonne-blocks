@@ -19,4 +19,15 @@ it.each(['{', 'null', '{"version":2,"mode":"gestures","gesturesExplained":true}'
 it('almacenamiento bloqueado mantiene el modo en memoria e informa del fallo', () => {
   const prefs = new Preferences({ getItem() { throw Error('blocked'); }, setItem() { throw Error('quota'); } } as unknown as Storage);
   expect(prefs.mode).toBe('buttons'); expect(prefs.set('gestures')).toBe(false); expect(prefs.mode).toBe('gestures');
+  expect(prefs.setVibration(true)).toBe(false); expect(prefs.vibration).toBe(true);
+});
+it('la vibración es opcional, migra preferencias antiguas y no cambia el modo de control', () => {
+  const store = memory('{"version":1,"mode":"gestures","gesturesExplained":true}');
+  const prefs = new Preferences(store); expect(prefs.vibration).toBe(false);
+  expect(prefs.setVibration(true)).toBe(true);
+  const reloaded = new Preferences(store);
+  expect(reloaded.vibration).toBe(true); expect(reloaded.mode).toBe('gestures');
+  reloaded.set('buttons'); expect(new Preferences(store).vibration).toBe(true);
+  reloaded.setVibration(false); expect(new Preferences(store).vibration).toBe(false);
+  expect(new Preferences(memory('{"version":1,"vibration":"true"}')).vibration).toBe(false);
 });

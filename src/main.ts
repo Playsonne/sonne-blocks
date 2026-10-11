@@ -6,6 +6,8 @@ import { Controls } from './controls';
 import { setupPwa } from './pwa';
 import { BoardGestures } from './gestures';
 import { Preferences, type ControlMode } from './preferences';
+import { Haptics, type HapticEffect } from './haptics';
+import { formatDuration, type SessionStats } from './session';
 
 const $ = <T extends HTMLElement = HTMLElement>(selector: string): T => document.querySelector<T>(selector)!;
 const store = new Persistence();
@@ -14,6 +16,8 @@ const saved = store.load();
 let game = new Game(Math.random, saved);
 let welcome = !saved;
 let best = Math.max(store.record(), saved?.score ?? 0);
+let session: SessionStats = store.session ?? { playedMs: 0, recordAtStart: best, completeDuration: !saved };
+const haptics = new Haptics(() => preferences.vibration);
 let lastTime = 0;
 let recordedLocks = 0;
 let lastStatus = '';
@@ -42,11 +46,11 @@ function storageNotice(): void {
   $('#game-caption').textContent = store.available ? (offlineReady ? 'Listo para jugar sin conexión · guardado local' : 'Tu partida se guarda en este dispositivo') : 'Partida en memoria · guardado no disponible';
 }
 function save(): void {
-  if (!welcome) store.save(game.snapshot());
+  if (!welcome) store.save(game.snapshot(), { ...session, playedMs: session.playedMs + game.elapsedMs });
   store.setRecord(best);
   storageNotice();
 }
-function sync(): void {
+function sync(effect?: HapticEffect): void {
   const s = game.state;
   best = Math.max(best, s.score);
   $('#score').textContent = number.format(s.score);
@@ -68,6 +72,7 @@ function sync(): void {
     if (!playing) { controls.reset(); gestures.cancel(); }
   }
   if (!playing) {
+    $('#game-result').hidden = welcome || s.status !== 'over';
     $('#new-game').hidden = welcome || s.status === 'over';
     if (welcome) {
       $('#overlay-kicker').textContent = 'TU PRÓXIMA PAUSA FAVORITA';
@@ -75,9 +80,15 @@ function sync(): void {
       $('#overlay-description').innerHTML = 'Completa líneas.<br />Encuentra tu ritmo.';
       $('#play').innerHTML = 'Empezar <span aria-hidden="true">↗</span>';
     } else if (s.status === 'over') {
-      $('#overlay-kicker').textContent = 'CADA PARTIDA CUENTA';
-      $('#overlay-title').innerHTML = 'Buen intento.<br />¿Otra ronda?';
-      $('#overlay-description').textContent = `${number.format(s.score)} puntos · ${s.lines} líneas`;
+      $('#overlay-title').textContent = 'Partida terminada';
+      $('#result-score').textContent = number.format(s.score);
+      $('#result-lines').textContent = number.format(s.lines);
+      $('#result-level').textContent = number.format(s.level);
+      $('#result-duration').textContent = formatDuration(session.playedMs + game.elapsedMs);
+      $('#result-duration-note').hidden = session.completeDuration;
+      const newRecord = s.score > session.recordAtStart;
+      $('#result-record').textContent = newRecord ? '¡Nuevo récord personal!' : `Tu récord: ${number.format(best)} puntos`;
+      $('#result-record').classList.toggle('new-record', newRecord);
       $('#play').textContent = 'Volver a jugar';
     } else {
       $('#overlay-title').textContent = 'Partida en pausa';
@@ -87,6 +98,11 @@ function sync(): void {
   if (game.locks !== recordedLocks) {
     gestures.cancel();
     recordedLocks = game.locks;
+    // A drop that clears lines gets only the line-clear pulse, never two overlapping effects.
+    if (playing) {
+      if (game.lastClear) haptics.play('clear');
+      else if (effect === 'drop') haptics.play('drop');
+    }
     if (game.lastClear) {
       const flash = $('#clear-message');
       flash.textContent = game.lastClear === 4 ? '¡4 líneas!' : `+${game.lastClear} ${game.lastClear === 1 ? 'línea' : 'líneas'}`;
@@ -100,13 +116,15 @@ function sync(): void {
 function action(value: Action): void {
   if (game.act(value)) {
     if (value === 'hold') gestures.cancel();
-    sync();
+    sync(value === 'drop' ? 'drop' : undefined);
   }
 }
 function pause(): void {
-  game.pause(); controls.reset(); gestures.cancel(); lastTime = 0; sync(); save();
+  haptics.stop(); game.pause(); controls.reset(); gestures.cancel(); lastTime = 0; sync(); save();
 }
 function startNew(): void {
+  haptics.stop();
+  session = { playedMs: 0, recordAtStart: best, completeDuration: true };
   game = new Game(); welcome = false; recordedLocks = 0; controls.reset(); gestures.cancel();
   game.resume(); lastTime = 0; save(); sync();
   (document.activeElement as HTMLElement | null)?.blur();
@@ -129,6 +147,23 @@ function openDialog(selector: string): void {
   $<HTMLDialogElement>(selector).showModal();
 }
 $('#help').addEventListener('click', () => openDialog('#help-dialog'));
+function renderVibration(): void {
+  const toggle = $<HTMLInputElement>('#vibration');
+  toggle.checked = preferences.vibration;
+  toggle.disabled = !haptics.supported;
+  $<HTMLButtonElement>('#test-vibration').disabled = !haptics.supported || !preferences.vibration;
+  $('#vibration-note').textContent = haptics.supported
+    ? 'Un pulso al dejar caer y dos al completar líneas. Puede depender de los ajustes de tu dispositivo.'
+    : 'Este navegador no ofrece vibración. El juego funciona igual.';
+}
+$('#vibration').addEventListener('change', () => {
+  haptics.stop();
+  if (!preferences.setVibration($<HTMLInputElement>('#vibration').checked)) notify('La vibración se mantendrá mientras esté abierto el juego. No se ha podido guardar la preferencia.');
+  renderVibration();
+});
+$('#test-vibration').addEventListener('click', () => {
+  if (!haptics.play('clear')) $('#vibration-note').textContent = 'No se pudo activar la vibración. Revisa los ajustes del dispositivo o prueba otro navegador.';
+});
 function renderControlMode(): void {
   document.documentElement.dataset.controlMode = preferences.mode;
   document.querySelectorAll<HTMLInputElement>('[name="control-mode"]').forEach(input => { input.checked = input.value === preferences.mode; });
@@ -155,13 +190,13 @@ $('#confirm-restart').addEventListener('click', () => { $<HTMLDialogElement>('#r
 document.querySelectorAll<HTMLElement>('[data-close]').forEach(button => button.addEventListener('click', () => button.closest('dialog')?.close()));
 $('.brand').addEventListener('click', event => { event.preventDefault(); pause(); });
 document.addEventListener('visibilitychange', () => { if (document.hidden) pause(); });
-window.addEventListener('blur', () => { if (game.state.status === 'playing') pause(); });
+window.addEventListener('blur', () => { haptics.stop(); if (game.state.status === 'playing') pause(); });
 window.addEventListener('pagehide', pause);
 window.addEventListener('pageshow', () => { game.pause(); lastTime = 0; sync(); });
 function connection(): void { $('#connection').textContent = navigator.onLine ? 'LOCAL · SIN CUENTAS' : 'SIN CONEXIÓN · A JUGAR'; }
 window.addEventListener('online', connection); window.addEventListener('offline', connection); connection();
 setupPwa({ notify, ready: () => { offlineReady = true; storageNotice(); }, prepareUpdate: pause, isPlaying: () => game.state.status === 'playing', installHelp: () => openDialog('#install-dialog') });
-renderControlMode(); sync(); storageNotice();
+renderControlMode(); renderVibration(); sync(); storageNotice();
 if (store.corrupted) notify('No se pudo recuperar la partida guardada. Puedes empezar otra.');
 function frame(time: number): void {
   const delta = lastTime ? time - lastTime : 0;

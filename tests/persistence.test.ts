@@ -11,6 +11,25 @@ class MemoryStorage implements Storage {
   setItem(key: string, value: string) { this.values.set(key, value); }
 }
 describe('guardado versionado', () => {
+  it('guarda el tiempo y el récord inicial con la partida y recupera sin pérdidas', () => {
+    const memory = new MemoryStorage(), store = new Persistence(memory);
+    const game = new Game(); game.resume(); game.advance(450);
+    const session = { playedMs: game.elapsedMs, recordAtStart: 100, completeDuration: true };
+    store.save(game.snapshot(), session);
+    const reloaded = new Persistence(memory);
+    expect(reloaded.load()).toEqual({ ...game.snapshot(), status: 'paused' });
+    expect(reloaded.session).toEqual(session);
+    const restoredGame = new Game(Math.random, reloaded.load());
+    restoredGame.resume(); restoredGame.advance(200);
+    reloaded.save(restoredGame.snapshot(), { ...session, playedMs: session.playedMs + restoredGame.elapsedMs });
+    reloaded.load(); expect(reloaded.session?.playedMs).toBe(650);
+  });
+  it.each([undefined, { playedMs: -5 }, { playedMs: 100, recordAtStart: null, completeDuration: true }])('los metadatos ausentes o dañados no descartan una partida válida: %j', session => {
+    const memory = new MemoryStorage(), game = new Game();
+    memory.setItem(SAVE_KEY, JSON.stringify({ version: 1, state: game.snapshot(), session }));
+    const store = new Persistence(memory);
+    expect(store.load()).toEqual(game.snapshot()); expect(store.session).toBeUndefined(); expect(store.corrupted).toBe(false);
+  });
   it('recupera tablero, temporizadores, reserva, siguiente y bolsa, siempre en pausa', () => {
     const store = new Persistence(new MemoryStorage()); const game = new Game(); game.resume();
     game.act('hold'); game.act('drop'); game.act('left'); game.advance(311); store.save(game.snapshot());

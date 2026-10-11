@@ -38,6 +38,8 @@ export class Game {
   state: GameState;
   locks = 0;
   lastClear = 0;
+  // Time actually simulated in this instance; excludes pauses and unused time after game over.
+  elapsedMs = 0;
   constructor(private readonly random = Math.random, saved?: GameState) {
     if (saved) {
       this.state = structuredClone(saved);
@@ -157,6 +159,7 @@ export class Game {
       const interval = gravityInterval(s.level);
       const step = Math.min(remaining, interval - s.gravityMs, grounded ? LOCK_DELAY - s.lockMs : Infinity);
       s.gravityMs += step;
+      this.elapsedMs += step;
       if (grounded) s.lockMs += step;
       remaining -= step;
       if (grounded && s.lockMs >= LOCK_DELAY) { this.lock(); continue; }

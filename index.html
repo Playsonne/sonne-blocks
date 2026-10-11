@@ -47,6 +47,16 @@
                   <span class="eyebrow" id="overlay-kicker">TU PRÓXIMA PAUSA FAVORITA</span>
                   <h2 id="overlay-title">Haz sitio.<br />Sigue jugando.</h2>
                   <p id="overlay-description">Completa líneas.<br />Encuentra tu ritmo.</p>
+                  <section class="game-result" id="game-result" aria-label="Resumen de la partida" hidden>
+                    <dl class="result-stats">
+                      <div class="result-points"><dt>Puntos</dt><dd id="result-score">0</dd></div>
+                      <div><dt>Líneas</dt><dd id="result-lines">0</dd></div>
+                      <div><dt>Nivel</dt><dd id="result-level">1</dd></div>
+                      <div class="result-time"><dt>Tiempo jugado</dt><dd id="result-duration">00:00</dd></div>
+                    </dl>
+                    <p id="result-duration-note" class="result-note" hidden>Tiempo desde la actualización; esta partida empezó en una versión anterior.</p>
+                    <p id="result-record" role="status"></p>
+                  </section>
                   <button class="primary" id="play">Empezar <span aria-hidden="true">↗</span></button>
                   <button class="text-button" id="new-game" hidden>Nueva partida</button>
                 </div>
@@ -73,6 +83,11 @@
       <span class="eyebrow">SONNE BLOCKS</span><h2 id="help-title">Cómo jugar</h2>
       <p>Completa filas horizontales sin dejar huecos. Cada 10 líneas subes de nivel y las piezas caen más rápido.</p>
       <fieldset class="control-mode"><legend>Controles en pantalla</legend><label><input type="radio" name="control-mode" value="buttons" checked /> Botones</label><label><input type="radio" name="control-mode" value="gestures" /> Gestos</label></fieldset>
+      <section class="vibration-settings" aria-label="Respuesta táctil">
+        <label class="setting-toggle"><input type="checkbox" id="vibration" aria-describedby="vibration-note" /> Vibración</label>
+        <p class="muted" id="vibration-note"></p>
+        <button class="text-button" id="test-vibration" disabled>Probar vibración</button>
+      </section>
       <p>Con botones, mantén pulsado ←, → o ↓ para repetir. Con gestos, juega con un dedo en cualquier punto del tablero: arrastra a los lados para mover y hacia abajo para bajar; toca la mitad izquierda o derecha para girar hacia ese lado. Desliza rápido y recto hacia abajo para dejar caer al soltar.</p>
       <p>Toca Reserva para guardar o intercambiar una pieza. Puedes hacerlo una vez por pieza. La silueta marca el aterrizaje. El teclado funciona en ambos modos.</p>
       <dl class="instructions"><dt>← / →</dt><dd>Mover a los lados</dd><dt>↓</dt><dd>Bajar más rápido</dd><dt>↑ / X · Z</dt><dd>Girar a la derecha · izquierda</dd><dt>Espacio</dt><dd>Caída instantánea</dd><dt>C</dt><dd>Reservar o intercambiar una pieza</dd><dt>Escape</dt><dd>Pausar la partida</dd></dl>

@@ -1,5 +1,22 @@
 # Validación de Sonne Blocks
 
+## v1.1.0 · Resumen y vibración opcional
+
+Validado el **11 de octubre de 2026** en Windows y Microsoft Edge mediante Playwright. **79 pruebas unitarias aprobadas**, compilación correcta y **61 comprobaciones de navegador aprobadas** (las 49 existentes y 12 nuevas; las nuevas se repitieron tras ajustar la sincronización/entrada de la prueba). Sin cambios en el reconocedor de gestos, los controles de teclado/botones ni las reglas CSS que restringen el zoom.
+
+- Resumen al terminar: puntos, líneas, nivel y tiempo jugado; récord comparado con el existente al iniciar, incluso después de recuperar una partida. Empatar o quedar por debajo no anuncia un nuevo récord. Reiniciar pone a cero el tiempo y los puntos y mantiene el récord.
+- El contador suma únicamente el tiempo integrado por el motor. Se probaron pausas, fin de partida a mitad de un intervalo, guardado y recarga sin red, sin duplicar tiempo. Los metadatos se guardan junto al tablero; los guardados antiguos o con metadatos inválidos conservan la partida y muestran una duración explícitamente parcial.
+- Resumen completo y botón accesible en 360 × 640; con 360 × 400 y texto al 200 % se puede desplazar hasta «Volver a jugar», sin desbordamiento horizontal. [Captura móvil emulada](resumen-movil.png).
+- Vibración inicialmente desactivada, preferencia persistente y botón de prueba; falta de API, errores y rechazo de la petición no afectan al juego. [Ajuste de vibración en emulación](ajuste-vibracion.png).
+- Se interceptó la API de vibración para comprobar pulsos de caída (12 ms), líneas (18/35/24 ms), ausencia de duplicados en caída + línea, ausencia de vibración en giros y funcionamiento con Botones y Gestos. Se verificó cancelación al pausar, desactivar y perder foco. **Esto comprueba las llamadas; no la vibración física ni su intensidad.**
+- Las pruebas originales siguen comprobando multitáctil en Botones, cancelación de gestos, guardado, actualización PWA y juego offline. No se ha añadido animación de filas ni sonido en esta entrega.
+
+**Observación pendiente en un dispositivo real:** tras un deslizamiento rápido generado mediante CDP, Chromium descartó el primer clic táctil emulado sobre Pausa (el segundo sí pausó). La misma secuencia produjo el mismo resultado en la web publicada v1.0.1 y en la v1.1.0 local, sin ser una regresión de estos cambios. La comprobación de cancelación tras ese deslizamiento usa Escape; otras pruebas cubren Pausa con toque. Conviene comprobar un toque en Pausa justo después de un deslizamiento en el Xiaomi 14. No se atribuye el fallo a dispositivos físicos ni se considera resuelto. La respuesta real de vibración sigue pendiente de prueba en hardware.
+
+Referencias: [API de vibración](https://developer.mozilla.org/en-US/docs/Web/API/Navigator/vibrate) y [especificación W3C](https://www.w3.org/TR/vibration/). La detección de la API no confirma que exista un motor ni que los ajustes del sistema permitan activarlo.
+
+## Historial: v1.0.1
+
 Comprobaciones actualizadas el **11 de octubre de 2026** tras añadir la versión visible para diagnosticar las actualizaciones y el zoom comunicado por el usuario, en Windows con Node.js 22.12.0 y Microsoft Edge 155.0.4283.45 (Chromium), mediante Playwright. Estos resultados corresponden a la validación local previa a la primera publicación en GitHub Pages.
 
 ## Resultado

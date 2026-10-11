@@ -1,5 +1,6 @@
 import { COLS, ROWS, LOCK_DELAY, MAX_LOCK_RESETS, collides, gravityInterval, type GameState } from './game/engine';
 import { TYPES, type PieceType } from './game/pieces';
+import { readSessionStats, type SessionStats } from './session';
 
 export const SAVE_KEY = 'sonne-blocks:save:v1';
 export const RECORD_KEY = 'sonne-blocks:record:v1';
@@ -23,6 +24,7 @@ export function validState(value: unknown): value is GameState {
 export class Persistence {
   available = true;
   corrupted = false;
+  session?: SessionStats;
   private storage?: Storage;
   constructor(storage?: Storage) {
     try { this.storage = storage ?? window.localStorage; } catch { this.available = false; }
@@ -37,18 +39,21 @@ export class Persistence {
     } catch { this.available = false; }
   }
   load(): GameState | undefined {
+    this.session = undefined;
     const raw = this.read(SAVE_KEY);
     if (!raw) return;
     try {
       if (raw.length > 16000) throw new Error('Tamaño');
       const parsed = JSON.parse(raw);
       if (parsed?.version !== 1 || !validState(parsed?.state)) throw new Error('Formato');
+      // Old saves remain valid. Invalid optional metadata never discards a playable game.
+      this.session = readSessionStats(parsed.session);
       return { ...parsed.state, status: 'paused' };
     } catch { this.corrupted = true; this.clear(); return; }
   }
-  save(state: GameState): void {
+  save(state: GameState, session?: SessionStats): void {
     if (state.status === 'over') { this.clear(); return; }
-    this.write(SAVE_KEY, JSON.stringify({ version: 1, state }));
+    this.write(SAVE_KEY, JSON.stringify({ version: 1, state, session }));
   }
   clear(): void { this.write(SAVE_KEY, null); }
   record(): number {
