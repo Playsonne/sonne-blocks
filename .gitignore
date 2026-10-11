@@ -1,0 +1,15 @@
+node_modules/
+.npm-cache/
+dist/
+dist-subpath/
+test-results/
+playwright-report/
+*.local
+.env
+.env.*
+!.env.example
+*.log
+.codex/
+.agents/
+.DS_Store
+Thumbs.db

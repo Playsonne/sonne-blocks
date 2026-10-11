@@ -1,0 +1,81 @@
+import { COLS, HIDDEN_ROWS, type Game } from './game/engine';
+import { cells, COLORS, type PieceType } from './game/pieces';
+
+function context(canvas: HTMLCanvasElement): CanvasRenderingContext2D {
+  const value = canvas.getContext('2d');
+  if (!value) throw new Error('Este navegador no permite dibujar el tablero.');
+  return value;
+}
+function tile(ctx: CanvasRenderingContext2D, x: number, y: number, size: number, color: string, ghost = false): void {
+  const gap = Math.max(1.3, size * .055);
+  ctx.beginPath();
+  ctx.roundRect(x + gap, y + gap, size - gap * 2, size - gap * 2, Math.max(2, size * .11));
+  if (ghost) {
+    ctx.fillStyle = color + '10'; ctx.fill();
+    ctx.strokeStyle = color + '65'; ctx.lineWidth = 1.2; ctx.stroke();
+  } else {
+    ctx.fillStyle = color; ctx.fill();
+    ctx.fillStyle = '#ffffff30'; ctx.fillRect(x + gap + 3, y + gap + 2, size - gap * 2 - 6, 2);
+    ctx.fillStyle = '#00000010'; ctx.fillRect(x + gap + 2, y + size - gap - 4, size - gap * 2 - 4, 2);
+  }
+}
+export class Renderer {
+  private ctx: CanvasRenderingContext2D;
+  private size = 300;
+  private dpr = 1;
+  constructor(private readonly canvas: HTMLCanvasElement, private readonly next: HTMLCanvasElement, private readonly hold: HTMLCanvasElement) {
+    this.ctx = context(canvas);
+    new ResizeObserver(() => this.resize()).observe(canvas.parentElement!.parentElement!);
+    window.addEventListener('resize', () => this.resize());
+    this.resize();
+  }
+  private resize(): void {
+    this.dpr = Math.min(window.devicePixelRatio || 1, 3);
+    const wrap = this.canvas.parentElement!;
+    const stage = wrap.parentElement!;
+    // CSS gives this slot the space left after header, stats, previews, controls and
+    // safe areas. Resizing changes only the canvas, never the game or its clock.
+    const available = stage.getBoundingClientRect();
+    this.size = Math.max(1, Math.min((available.height - 2) / 2, available.width - 2));
+    wrap.style.width = `${this.size + 2}px`;
+    wrap.style.height = `${this.size * 2 + 2}px`;
+    this.canvas.width = Math.round(this.size * this.dpr);
+    this.canvas.height = this.canvas.width * 2;
+  }
+  draw(game: Game, welcome: boolean): void {
+    const ctx = this.ctx;
+    const unit = this.size / COLS;
+    const scale = this.canvas.width / this.size;
+    ctx.setTransform(scale, 0, 0, scale, 0, 0);
+    ctx.clearRect(0, 0, this.size, this.size * 2);
+    ctx.strokeStyle = '#22312766'; ctx.lineWidth = .6;
+    for (let x = 1; x < 10; x++) { ctx.beginPath(); ctx.moveTo(x * unit, 0); ctx.lineTo(x * unit, this.size * 2); ctx.stroke(); }
+    for (let y = 1; y < 20; y++) { ctx.beginPath(); ctx.moveTo(0, y * unit); ctx.lineTo(this.size, y * unit); ctx.stroke(); }
+    if (welcome) {
+      const pattern = ['0000000000','0000000000','0000000000','0000000000','0000000000','0000000000','0000000000','0000000000','0000000000','0000000000','0000000000','0000000000','0000000000','0000000000','0000000000','0000000000','000000000T','0SS00000TT','SS0LL00JZT','OO0LIIIIZZ'];
+      pattern.forEach((row, y) => [...row].forEach((type, x) => { if (type !== '0') tile(ctx, x * unit, y * unit, unit, COLORS[type as PieceType]); }));
+    } else {
+      game.state.board.slice(HIDDEN_ROWS).forEach((row, y) => row.forEach((type, x) => { if (type) tile(ctx, x * unit, y * unit, unit, COLORS[type]); }));
+      if (game.state.status !== 'over') {
+        for (const [x, y] of cells(game.ghost())) if (y >= HIDDEN_ROWS) tile(ctx, x * unit, (y - HIDDEN_ROWS) * unit, unit, COLORS[game.state.active.type], true);
+        for (const [x, y] of cells(game.state.active)) if (y >= HIDDEN_ROWS) tile(ctx, x * unit, (y - HIDDEN_ROWS) * unit, unit, COLORS[game.state.active.type]);
+      }
+    }
+    this.preview(this.next, game.state.next, 'Siguiente pieza');
+    this.preview(this.hold, game.state.hold, 'Pieza reservada');
+  }
+  private preview(canvas: HTMLCanvasElement, type: PieceType | null, label: string): void {
+    const ctx = context(canvas);
+    const dpr = this.dpr;
+    if (canvas.width !== 100 * dpr) { canvas.width = 100 * dpr; canvas.height = 70 * dpr; }
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, 100, 70);
+    canvas.setAttribute('aria-label', type ? `${label}: ${type}` : 'Sin pieza reservada');
+    if (!type) { ctx.fillStyle = '#64755f'; ctx.font = '20px sans-serif'; ctx.textAlign = 'center'; ctx.fillText('—', 50, 42); return; }
+    const points = cells({ type, rotation: 0, x: 0, y: 0 });
+    const minX = Math.min(...points.map(([x]) => x)), maxX = Math.max(...points.map(([x]) => x));
+    const minY = Math.min(...points.map(([, y]) => y)), maxY = Math.max(...points.map(([, y]) => y));
+    const size = 19, offsetX = (100 - (maxX - minX + 1) * size) / 2, offsetY = (70 - (maxY - minY + 1) * size) / 2;
+    for (const [x, y] of points) tile(ctx, offsetX + (x - minX) * size, offsetY + (y - minY) * size, size, COLORS[type]);
+  }
+}

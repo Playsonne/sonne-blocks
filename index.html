@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#111916" />
+    <meta name="description" content="Sonne Blocks. Un pequeño respiro, una pieza cada vez. Juego de bloques sin anuncios, con guardado local y modo sin conexión." />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Sonne Blocks" />
+    <link rel="icon" type="image/svg+xml" href="%BASE_URL%icons/sonne.svg" />
+    <link rel="apple-touch-icon" href="%BASE_URL%icons/apple-touch-icon.png" />
+    <link rel="manifest" href="%BASE_URL%manifest.webmanifest" />
+    <title>Sonne Blocks — Una pieza cada vez</title>
+  </head>
+  <body>
+    <div class="app">
+      <header class="header">
+        <a class="brand" href="./" aria-label="Sonne Blocks, inicio" aria-describedby="app-version"><img src="%BASE_URL%icons/sonne.svg" width="34" height="34" alt="" /><span>Sonne <b>Blocks</b><small>UN PEQUEÑO RESPIRO</small><span class="app-version" id="app-version" title="Versión y compilación que estás usando">v__APP_VERSION__ · __APP_BUILD__</span></span></a>
+        <div class="header-actions"><span class="connection" id="connection">LOCAL · SIN CUENTAS</span><button class="icon-button" id="help" aria-label="Cómo jugar" title="Cómo jugar">?</button><button class="icon-button" id="pause" aria-label="Pausar partida" title="Pausar partida" disabled>Ⅱ</button></div>
+      </header>
+      <div class="update-banner" id="update-banner" role="status" hidden><span>Hay una nueva versión lista.</span><button id="update">Actualizar al pausar</button></div>
+      <main class="workspace">
+        <section class="intro" aria-label="Sonne Blocks">
+          <span class="eyebrow"><i></i> ENCUENTRA TU RITMO</span>
+          <h1>Todo encaja.<br />Una pieza<br /><em>cada vez.</em></h1>
+          <p>Mueve, gira y deja espacio para lo que viene. Solo tú y el siguiente bloque.</p>
+          <p class="intro-note">Sin prisa al empezar.<br />Un poco más rápido cada 10 líneas.</p>
+        </section>
+        <section class="game" aria-label="Juego de bloques">
+          <div class="scoreboard" aria-label="Estadísticas">
+            <div><span class="label">PUNTOS</span><strong id="score">0</strong></div>
+            <div class="best"><span class="label">RÉCORD</span><strong id="best">0</strong></div>
+            <div class="level-stat"><span class="label">NIVEL</span><strong id="level">01</strong><div class="progress-track" role="progressbar" aria-label="Líneas para el siguiente nivel" aria-valuemin="0" aria-valuemax="10" aria-valuenow="0" id="progress"><div id="progress-fill"></div></div></div>
+            <div><span class="label">LÍNEAS</span><strong id="lines">0</strong></div>
+          </div>
+          <div class="previews" aria-label="Piezas de reserva y siguiente">
+            <button class="piece-box" id="hold-box" aria-label="Reservar o intercambiar pieza" aria-describedby="hold-note" title="Reservar o intercambiar (C)"><span><span class="label">RESERVA</span><span class="hold-note" id="hold-note">Disponible</span></span><canvas id="hold" width="100" height="70" role="img" aria-label="Sin pieza reservada"></canvas></button>
+            <div class="piece-box"><span class="label">SIGUIENTE</span><canvas id="next" width="100" height="70" role="img" aria-label="Siguiente pieza"></canvas></div>
+          </div>
+          <div class="stage">
+            <div class="board-wrap">
+              <canvas id="board" width="300" height="600" role="img" aria-label="Tablero de juego de 10 columnas y 20 filas"></canvas>
+              <div class="board-overlay" id="overlay">
+                <div class="overlay-content">
+                  <span class="overlay-mark" aria-hidden="true">✳</span>
+                  <span class="eyebrow" id="overlay-kicker">TU PRÓXIMA PAUSA FAVORITA</span>
+                  <h2 id="overlay-title">Haz sitio.<br />Sigue jugando.</h2>
+                  <p id="overlay-description">Completa líneas.<br />Encuentra tu ritmo.</p>
+                  <button class="primary" id="play">Empezar <span aria-hidden="true">↗</span></button>
+                  <button class="text-button" id="new-game" hidden>Nueva partida</button>
+                </div>
+              </div>
+              <div class="clear-message" id="clear-message" aria-hidden="true"></div>
+            </div>
+          </div>
+          <div class="controls" aria-label="Controles de juego">
+            <button data-action="ccw" class="control secondary" aria-label="Girar a la izquierda"><span class="control-symbol">↶</span><span>Girar izq.</span><kbd>Z</kbd></button>
+            <button data-action="cw" class="control secondary" aria-label="Girar a la derecha"><span class="control-symbol">↷</span><span>Girar der.</span><kbd>↑ / X</kbd></button>
+            <button data-action="hold" class="control secondary" aria-label="Reservar pieza"><span class="control-symbol">⇄</span><span>Reservar</span><kbd>C</kbd></button>
+            <button data-action="left" class="control move" aria-label="Mover a la izquierda"><span>←</span></button>
+            <button data-action="down" class="control move" aria-label="Caída suave"><span>↓</span></button>
+            <button data-action="right" class="control move" aria-label="Mover a la derecha"><span>→</span></button>
+            <button data-action="drop" class="control drop" aria-label="Caída instantánea" title="Caída instantánea (Espacio)"><span>⇓</span><small>CAER<span class="drop-detail"> AL INSTANTE</span></small></button>
+          </div>
+          <div class="keyboard-guide" aria-label="Atajos de teclado"><span><kbd>← ↓ →</kbd> Mover</span><span><kbd>↑ / X · Z</kbd> Girar</span><span><kbd>espacio</kbd> Caer</span><span><kbd>C</kbd> Reserva</span><span><kbd>esc</kbd> Pausa</span></div>
+        </section>
+      </main>
+    </div>
+    <div class="toast" id="toast" role="status" hidden></div>
+    <dialog id="help-dialog" aria-labelledby="help-title">
+      <button class="dialog-close icon-button" data-close aria-label="Cerrar instrucciones">×</button>
+      <span class="eyebrow">SONNE BLOCKS</span><h2 id="help-title">Cómo jugar</h2>
+      <p>Completa filas horizontales sin dejar huecos. Cada 10 líneas subes de nivel y las piezas caen más rápido.</p>
+      <fieldset class="control-mode"><legend>Controles en pantalla</legend><label><input type="radio" name="control-mode" value="buttons" checked /> Botones</label><label><input type="radio" name="control-mode" value="gestures" /> Gestos</label></fieldset>
+      <p>Con botones, mantén pulsado ←, → o ↓ para repetir. Con gestos, juega con un dedo en cualquier punto del tablero: arrastra a los lados para mover y hacia abajo para bajar; toca la mitad izquierda o derecha para girar hacia ese lado. Desliza rápido y recto hacia abajo para dejar caer al soltar.</p>
+      <p>Toca Reserva para guardar o intercambiar una pieza. Puedes hacerlo una vez por pieza. La silueta marca el aterrizaje. El teclado funciona en ambos modos.</p>
+      <dl class="instructions"><dt>← / →</dt><dd>Mover a los lados</dd><dt>↓</dt><dd>Bajar más rápido</dd><dt>↑ / X · Z</dt><dd>Girar a la derecha · izquierda</dd><dt>Espacio</dt><dd>Caída instantánea</dd><dt>C</dt><dd>Reservar o intercambiar una pieza</dd><dt>Escape</dt><dd>Pausar la partida</dd></dl>
+      <p class="muted">1 / 2 / 3 / 4 líneas: 100 / 300 / 500 / 800 puntos × nivel. Caída suave: 1 punto por casilla; instantánea: 2. Dispones de medio segundo para ajustar una pieza al tocar el suelo, con un máximo de 15 reinicios de ese margen.</p>
+      <section class="help-app-info" aria-label="Instalación y almacenamiento">
+        <h3>El juego, siempre a mano</h3>
+        <p id="game-caption" role="status">Tu partida se guarda en este dispositivo</p>
+        <p id="last-notice" role="status" hidden></p>
+        <button id="install" class="text-button">Instalar el juego <span aria-hidden="true">↗</span></button>
+        <p class="muted">Hecho para desconectar. Sin cuentas, anuncios ni sonido.</p>
+      </section>
+      <button class="primary" data-close>Entendido</button>
+    </dialog>
+    <dialog id="gesture-dialog" aria-labelledby="gesture-title">
+      <button class="dialog-close icon-button" data-close aria-label="Volver a los ajustes">×</button>
+      <span class="eyebrow">UN DEDO · TODO EL TABLERO</span><h2 id="gesture-title">Juega con gestos</h2>
+      <ul class="gesture-instructions"><li><strong>Arrastra a los lados</strong> para mover, incluso cambiando de dirección.</li><li><strong>Toca a la izquierda o derecha</strong> para girar hacia ese lado.</li><li><strong>Arrastra hacia abajo</strong> para bajar poco a poco.</li><li><strong>Desliza rápido y recto hacia abajo</strong> para dejar caer al soltar.</li><li><strong>Toca Reserva</strong> para guardar o intercambiar.</li></ul>
+      <p>Cuando una pieza se fija, levanta el dedo antes de mover la siguiente. Puedes volver a Botones desde la ayuda «?».</p>
+      <button class="primary" id="start-gestures">Empezar con gestos</button>
+    </dialog>
+    <dialog id="install-dialog" aria-labelledby="install-title">
+      <button class="dialog-close icon-button" data-close aria-label="Cerrar ayuda de instalación">×</button>
+      <span class="eyebrow">SIEMPRE A MANO</span><h2 id="install-title">Tu pequeño respiro.</h2>
+      <h3>En iPhone o iPad</h3><p>Abre el juego en Safari, pulsa Compartir y elige «Añadir a pantalla de inicio». Si aparece, activa «Abrir como app web».</p>
+      <h3>En Android</h3><p>Abre el juego en Chrome y pulsa «Instalar el juego» cuando esté disponible. También puedes usar «Instalar aplicación» o «Añadir a pantalla de inicio» en el menú del navegador.</p>
+      <p class="muted">Espera al aviso «Listo para jugar sin conexión» antes de desconectarte. La instalación requiere HTTPS o localhost. El guardado pertenece a este navegador o a la app instalada; puede no compartirse entre ambos.</p>
+      <button class="primary" data-close>Entendido</button>
+    </dialog>
+    <dialog id="restart-dialog" aria-labelledby="restart-title">
+      <span class="eyebrow">VOLVER A EMPEZAR</span><h2 id="restart-title">¿Una nueva partida?</h2><p>Se sustituirá la partida actual. Tu récord se conserva.</p><div class="dialog-buttons"><button class="primary" id="confirm-restart">Empezar otra</button><button class="text-button" data-close>Volver</button></div>
+    </dialog>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

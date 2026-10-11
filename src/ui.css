@@ -1,0 +1,43 @@
+dialog {
+  color: #e9ede5;
+  background: #18231c;
+  border: 1px solid #40503d;
+  border-radius: 15px;
+  padding: 28px;
+  width: calc(100% - 24px);
+  max-width: 480px;
+  max-height: calc(100vh - 24px);
+  max-height: calc(100dvh - var(--safe-top) - var(--safe-bottom) - 24px);
+  overflow: auto;
+  overscroll-behavior: contain;
+  overflow-wrap: anywhere;
+  box-shadow: 0 20px 90px #0008;
+}
+dialog::backdrop { background: #07100bba; backdrop-filter: blur(4px); }
+dialog h2 { margin: 16px 44px 20px 0; font-size: 1.75rem; line-height: 1.2; font-weight: 500; letter-spacing: -.6px; }
+dialog h3 { margin-top: 24px; font-size: .9375rem; }
+dialog p { color: #c0cbbf; font-size: .875rem; line-height: 1.7; }
+dialog .muted { color: #a4b29f; font-size: .75rem; }
+dialog .primary { margin-top: 12px; }
+.dialog-close { position: absolute; right: 12px; top: 12px; }
+.instructions { display: grid; grid-template-columns: minmax(80px, .8fr) minmax(0, 1.4fr); gap: 12px; margin: 24px 0; font-size: .8125rem; }
+.instructions dt { color: #d5efa0; }
+.instructions dd { margin: 0; color: #bfcbb9; }
+.control-mode { display: flex; flex-wrap: wrap; gap: 8px; margin: 22px 0 16px; padding: 0; border: 0; min-width: 0; }
+.control-mode legend { margin-bottom: 8px; font-size: .875rem; }
+.control-mode label { display: flex; align-items: center; justify-content: center; gap: 8px; flex: 1 1 110px; min-height: 44px; padding: 10px; border: 1px solid #43553d; border-radius: 7px; cursor: pointer; font-size: .875rem; }
+.control-mode label:has(:checked) { background: #30432a; border-color: var(--accent); color: var(--accent); }
+.control-mode label:focus-within { outline: 2px solid var(--accent); outline-offset: 3px; }
+.control-mode input { accent-color: var(--accent); margin: 0; flex-shrink: 0; }
+.gesture-instructions { padding-left: 20px; color: #c0cbbf; font-size: .875rem; line-height: 1.6; }
+.gesture-instructions li + li { margin-top: 12px; }
+.gesture-instructions strong { color: #e9ede5; }
+.dialog-buttons { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.help-app-info { margin-block: 24px 12px; border-block: 1px solid var(--line); }
+.help-app-info #game-caption { font-size: .8125rem; }
+.help-app-info #last-notice { color: #d5efa0; }
+.help-app-info #install { padding-inline: 0; color: var(--accent); text-align: left; }
+.toast { position: fixed; z-index: 10; left: 50%; top: calc(64px + var(--safe-top)); transform: translateX(-50%); width: max-content; max-width: calc(100% - 24px); padding: 12px 16px; border: 1px solid #546345; border-radius: 9px; background: #263421; color: #e4efd8; box-shadow: 0 10px 35px #0006; font-size: .8125rem; line-height: 1.5; text-align: center; pointer-events: none; }
+.update-banner { grid-area: notice; display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 8px 14px; margin-top: 6px; padding: 6px 10px; border: 1px solid #627b4f; border-radius: 8px; background: #283c23; font-size: .8125rem; }
+.update-banner button { min-height: 44px; padding: 8px 12px; border: 0; border-radius: 5px; background: #d5efa0; color: #213119; font-size: .75rem; }
+@media (max-width: 380px) { dialog { padding: 20px; } }

@@ -1,0 +1,19 @@
+{
+  "id": "./",
+  "name": "Sonne Blocks",
+  "short_name": "Sonne Blocks",
+  "description": "Un pequeño respiro, una pieza cada vez. Un juego de bloques para llevar contigo.",
+  "lang": "es",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#111916",
+  "theme_color": "#111916",
+  "categories": ["games"],
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
