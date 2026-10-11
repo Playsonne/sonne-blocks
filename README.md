@@ -67,7 +67,15 @@ Al terminar se muestran **puntos, líneas, nivel y tiempo jugado**, con un aviso
 
 En **? → Vibración** puedes activar la respuesta táctil y pulsar **Probar vibración**. Está desactivada por defecto y se recuerda en el dispositivo, independientemente de Botones/Gestos. Una caída instantánea emite un pulso de 12 ms; completar líneas emite dos de 18 y 24 ms separados por 35 ms. Si una caída completa líneas se usa solo este último patrón. Mover y girar no vibran. Pausar, cambiar de aplicación o desactivar la opción cancela los pulsos pendientes.
 
-Se usa la [API de vibración del navegador](https://developer.mozilla.org/en-US/docs/Web/API/Navigator/vibrate): su presencia no garantiza que el dispositivo tenga motor o que sus ajustes permitan vibrar. Si falta, los ajustes lo indican y el juego continúa funcionando. Las pruebas automáticas comprueban las llamadas, su preferencia y sus cancelaciones; la sensación e intensidad reales requieren probarlo en el móvil. La animación de eliminación de filas y el sonido quedan para una mejora posterior.
+Se usa la [API de vibración del navegador](https://developer.mozilla.org/en-US/docs/Web/API/Navigator/vibrate): su presencia no garantiza que el dispositivo tenga motor o que sus ajustes permitan vibrar. Si falta, los ajustes lo indican y el juego continúa funcionando. Las pruebas automáticas comprueban las llamadas, su preferencia y sus cancelaciones; la sensación e intensidad reales requieren probarlo en el móvil. El sonido queda para una mejora posterior.
+
+### Animación opcional de filas (v1.2.0)
+
+En **? → Animación de filas** puedes activar o desactivar un brillo suave con contracción y desvanecimiento de los bloques completados. Dura **260 ms**, conserva sus colores y se dibuja debajo de la pieza activa y la sombra. Las filas se eliminan y puntúan inmediatamente; la animación no retrasa la pieza siguiente ni bloquea los controles.
+
+Está activada inicialmente y guarda tu elección sin cambiar Botones/Gestos ni la vibración. Si el sistema solicita **reducir movimiento**, se desactiva y la ayuda explica por qué; al retirar esa preferencia vuelve a respetar tu elección anterior. Con la animación apagada, el aviso de líneas sigue apareciendo como texto estático.
+
+Pausar, abrir la ayuda, pasar a segundo plano, reiniciar, cambiar el tamaño del tablero o fijar otra pieza cancela el efecto anterior. Una nueva eliminación lo sustituye sin acumular animaciones. Solo se conservan copias temporales de las filas eliminadas: no se guardan en la partida ni reaparecen al recuperarla.
 
 ## Distribución de pantalla
 
@@ -158,6 +166,7 @@ src/preferences.ts  Preferencia Botones/Gestos, separada de la partida
 src/haptics.ts     Vibración opcional y cancelación de pulsos
 src/session.ts     Metadatos del resumen y formato del tiempo jugado
 src/render.ts      Tablero, sombra y vistas previas en Canvas 2D
+src/line-animation.ts  Duración y filas temporales del efecto visual
 src/persistence.ts Guardado versionado, validación y gestión de errores
 src/pwa.ts         Instalación y aceptación explícita de actualizaciones
 src/main.ts        Flujo de pantallas, pausa y conexión de componentes

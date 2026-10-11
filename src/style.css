@@ -149,6 +149,7 @@ html[data-game-status="paused"] #overlay-description { display: none; }
 html[data-game-status="paused"] #overlay-title { margin: 0 0 20px; font-size: 1.375rem; letter-spacing: -.5px; }
 .clear-message { position: absolute; inset: 43% 0 auto; pointer-events: none; color: var(--accent); font-size: 1.5rem; font-weight: 700; text-align: center; text-shadow: 0 2px 12px #000; opacity: 0; }
 .clear-message.flash { animation: clear .7s ease-out; }
+html[data-line-animation="false"] .clear-message.flash { animation: none; opacity: 1; }
 @keyframes clear { 0% { opacity: 1; transform: translateY(8px); } 85% { opacity: 1; } 100% { opacity: 0; transform: translateY(-10px); } }
 
 /* Phones: one column. dvh follows browser chrome and standalone mode; the app

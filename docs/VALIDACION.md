@@ -1,5 +1,17 @@
 # Validación de Sonne Blocks
 
+## v1.2.0 · Animación opcional de filas
+
+Validado el **11 de octubre de 2026** en Windows y Microsoft Edge mediante Playwright: **85 pruebas unitarias y 70 pruebas de navegador aprobadas**, además de la compilación de producción. Son seis pruebas unitarias y nueve de navegador adicionales; se mantienen las comprobaciones anteriores de controles, gestos, multitáctil, guardado, actualización y funcionamiento offline.
+
+- Se comprueban los índices y colores originales de las filas antes de compactar el tablero, incluso con filas no contiguas. El efecto dura **260 ms**, se limita a las filas visibles y no forma parte del guardado.
+- El navegador usa un reloj controlado y lee píxeles reales del Canvas: el efecto aparece tras completar una o cuatro filas y desaparece al terminar su duración. Los puntos, la eliminación de filas y la siguiente pieza se actualizan inmediatamente; esta última responde durante la animación.
+- Desactivar «Animación de filas» conserva los mismos puntos, tablero y aviso de líneas, sin animarlo. La preferencia persiste tras recargar sin conexión y no altera los ajustes de Gestos ni de vibración. Los ajustes antiguos conservan compatibilidad.
+- La reducción de movimiento del sistema suprime la animación al cargar y cancela un efecto en curso sin alterar la partida ni sobrescribir la preferencia elegida. Se comprueban también las cancelaciones al pausar, redimensionar y fijar otra pieza, y que continuar no repite efectos anteriores.
+- [Captura móvil emulada a 390 × 844 durante el efecto](animacion-filas-movil.png). El efecto queda debajo de la pieza activa y su sombra. No se añaden sonidos ni se modifican los umbrales de gestos, el diseño o las restricciones táctiles.
+
+**No se han realizado pruebas físicas de esta animación en Android ni iOS.** La fluidez y la comodidad visual en el Xiaomi 14 quedan pendientes de la prueba del usuario.
+
 ## v1.1.0 · Resumen y vibración opcional
 
 Validado el **11 de octubre de 2026** en Windows y Microsoft Edge mediante Playwright. **79 pruebas unitarias aprobadas**, compilación correcta y **61 comprobaciones de navegador aprobadas** (las 49 existentes y 12 nuevas; las nuevas se repitieron tras ajustar la sincronización/entrada de la prueba). Sin cambios en el reconocedor de gestos, los controles de teclado/botones ni las reglas CSS que restringen el zoom.

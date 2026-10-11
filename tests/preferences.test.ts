@@ -31,3 +31,17 @@ it('la vibración es opcional, migra preferencias antiguas y no cambia el modo d
   reloaded.setVibration(false); expect(new Preferences(store).vibration).toBe(false);
   expect(new Preferences(memory('{"version":1,"vibration":"true"}')).vibration).toBe(false);
 });
+it('recuerda la animación independientemente de vibración y controles, migrando los ajustes existentes', () => {
+  const store = memory('{"version":1,"mode":"gestures","gesturesExplained":true,"vibration":true}');
+  const prefs = new Preferences(store); expect(prefs.lineAnimation).toBe(true);
+  expect(prefs.setLineAnimation(false)).toBe(true);
+  const reloaded = new Preferences(store);
+  expect(reloaded.lineAnimation).toBe(false); expect(reloaded.mode).toBe('gestures'); expect(reloaded.vibration).toBe(true);
+  reloaded.set('buttons'); reloaded.setVibration(false); expect(new Preferences(store).lineAnimation).toBe(false);
+  reloaded.setLineAnimation(true); expect(new Preferences(store).lineAnimation).toBe(true);
+});
+it('un ajuste de animación inválido usa el valor inicial y el almacenamiento bloqueado no impide cambiarlo', () => {
+  expect(new Preferences(memory('{"version":1,"lineAnimation":"false"}')).lineAnimation).toBe(true);
+  const prefs = new Preferences({ getItem() { throw Error('blocked'); }, setItem() { throw Error('quota'); } } as unknown as Storage);
+  expect(prefs.setLineAnimation(false)).toBe(false); expect(prefs.lineAnimation).toBe(false);
+});

@@ -18,6 +18,7 @@ let welcome = !saved;
 let best = Math.max(store.record(), saved?.score ?? 0);
 let session: SessionStats = store.session ?? { playedMs: 0, recordAtStart: best, completeDuration: !saved };
 const haptics = new Haptics(() => preferences.vibration);
+const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 let lastTime = 0;
 let recordedLocks = 0;
 let lastStatus = '';
@@ -50,6 +51,10 @@ function save(): void {
   store.setRecord(best);
   storageNotice();
 }
+function stopLineEffects(): void {
+  renderer.cancelLineAnimation();
+  clearTimeout(flashTimer); $('#clear-message').classList.remove('flash');
+}
 function sync(effect?: HapticEffect): void {
   const s = game.state;
   best = Math.max(best, s.score);
@@ -69,7 +74,7 @@ function sync(effect?: HapticEffect): void {
   document.documentElement.dataset.gameStatus = welcome ? 'welcome' : s.status;
   if (s.status !== lastStatus) {
     lastStatus = s.status;
-    if (!playing) { controls.reset(); gestures.cancel(); }
+    if (!playing) { controls.reset(); gestures.cancel(); stopLineEffects(); }
   }
   if (!playing) {
     $('#game-result').hidden = welcome || s.status !== 'over';
@@ -97,13 +102,16 @@ function sync(effect?: HapticEffect): void {
   }
   if (game.locks !== recordedLocks) {
     gestures.cancel();
+    // A new lock replaces the visual event instead of leaving effects over a newer board.
+    renderer.cancelLineAnimation();
     recordedLocks = game.locks;
     // A drop that clears lines gets only the line-clear pulse, never two overlapping effects.
     if (playing) {
       if (game.lastClear) haptics.play('clear');
       else if (effect === 'drop') haptics.play('drop');
     }
-    if (game.lastClear) {
+    if (game.lastClear && playing) {
+      if (preferences.lineAnimation && !reducedMotion.matches) renderer.animateLines(game.lastClearedRows);
       const flash = $('#clear-message');
       flash.textContent = game.lastClear === 4 ? '¡4 líneas!' : `+${game.lastClear} ${game.lastClear === 1 ? 'línea' : 'líneas'}`;
       flash.classList.remove('flash'); void flash.offsetWidth; flash.classList.add('flash');
@@ -120,10 +128,10 @@ function action(value: Action): void {
   }
 }
 function pause(): void {
-  haptics.stop(); game.pause(); controls.reset(); gestures.cancel(); lastTime = 0; sync(); save();
+  haptics.stop(); stopLineEffects(); game.pause(); controls.reset(); gestures.cancel(); lastTime = 0; sync(); save();
 }
 function startNew(): void {
-  haptics.stop();
+  haptics.stop(); stopLineEffects();
   session = { playedMs: 0, recordAtStart: best, completeDuration: true };
   game = new Game(); welcome = false; recordedLocks = 0; controls.reset(); gestures.cancel();
   game.resume(); lastTime = 0; save(); sync();
@@ -164,6 +172,22 @@ $('#vibration').addEventListener('change', () => {
 $('#test-vibration').addEventListener('click', () => {
   if (!haptics.play('clear')) $('#vibration-note').textContent = 'No se pudo activar la vibración. Revisa los ajustes del dispositivo o prueba otro navegador.';
 });
+function renderAnimationPreference(): void {
+  const enabled = preferences.lineAnimation && !reducedMotion.matches;
+  const toggle = $<HTMLInputElement>('#line-animation');
+  toggle.checked = enabled;
+  toggle.disabled = reducedMotion.matches;
+  document.documentElement.dataset.lineAnimation = String(enabled);
+  $('#line-animation-note').textContent = reducedMotion.matches
+    ? 'Desactivada porque tienes configurada la reducción de movimiento.'
+    : 'Brillo y desvanecimiento breves al completar filas. La siguiente pieza sigue su ritmo.';
+  if (!enabled) renderer.cancelLineAnimation();
+}
+$('#line-animation').addEventListener('change', () => {
+  if (!preferences.setLineAnimation($<HTMLInputElement>('#line-animation').checked)) notify('La animación se mantendrá mientras esté abierto el juego. No se ha podido guardar la preferencia.');
+  renderAnimationPreference();
+});
+reducedMotion.addEventListener('change', renderAnimationPreference);
 function renderControlMode(): void {
   document.documentElement.dataset.controlMode = preferences.mode;
   document.querySelectorAll<HTMLInputElement>('[name="control-mode"]').forEach(input => { input.checked = input.value === preferences.mode; });
@@ -196,7 +220,7 @@ window.addEventListener('pageshow', () => { game.pause(); lastTime = 0; sync(); 
 function connection(): void { $('#connection').textContent = navigator.onLine ? 'LOCAL · SIN CUENTAS' : 'SIN CONEXIÓN · A JUGAR'; }
 window.addEventListener('online', connection); window.addEventListener('offline', connection); connection();
 setupPwa({ notify, ready: () => { offlineReady = true; storageNotice(); }, prepareUpdate: pause, isPlaying: () => game.state.status === 'playing', installHelp: () => openDialog('#install-dialog') });
-renderControlMode(); renderVibration(); sync(); storageNotice();
+renderControlMode(); renderVibration(); renderAnimationPreference(); sync(); storageNotice();
 if (store.corrupted) notify('No se pudo recuperar la partida guardada. Puedes empezar otra.');
 function frame(time: number): void {
   const delta = lastTime ? time - lastTime : 0;
@@ -206,7 +230,7 @@ function frame(time: number): void {
     if (delta > 250) pause();
     else { controls.advance(delta); game.advance(delta); sync(); }
   }
-  renderer.draw(game, welcome);
+  renderer.draw(game, welcome, time);
   requestAnimationFrame(frame);
 }
 requestAnimationFrame(frame);

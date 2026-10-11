@@ -4,12 +4,14 @@ export class Preferences {
   mode: ControlMode = 'buttons';
   gesturesExplained = false;
   vibration = false;
+  lineAnimation = true;
   private storage?: Storage;
   constructor(storage?: Storage) {
     try {
       this.storage = storage ?? localStorage;
       const data = JSON.parse(this.storage.getItem(PREFERENCES_KEY) ?? 'null');
       if (data?.version === 1) this.vibration = data.vibration === true;
+      if (data?.version === 1 && typeof data.lineAnimation === 'boolean') this.lineAnimation = data.lineAnimation;
       if (data?.version === 1 && (data.mode === 'buttons' || data.mode === 'gestures') && typeof data.gesturesExplained === 'boolean') {
         this.gesturesExplained = data.gesturesExplained;
         // Never silently enter an unexplained mode after a partial/corrupt write.
@@ -26,10 +28,14 @@ export class Preferences {
     this.vibration = enabled;
     return this.save();
   }
+  setLineAnimation(enabled: boolean): boolean {
+    this.lineAnimation = enabled;
+    return this.save();
+  }
   private save(): boolean {
     try {
       if (!this.storage) return false;
-      this.storage.setItem(PREFERENCES_KEY, JSON.stringify({ version: 1, mode: this.mode, gesturesExplained: this.gesturesExplained, vibration: this.vibration }));
+      this.storage.setItem(PREFERENCES_KEY, JSON.stringify({ version: 1, mode: this.mode, gesturesExplained: this.gesturesExplained, vibration: this.vibration, lineAnimation: this.lineAnimation }));
       return true;
     } catch { return false; }
   }

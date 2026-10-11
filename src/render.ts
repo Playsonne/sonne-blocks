@@ -1,5 +1,6 @@
-import { COLS, HIDDEN_ROWS, type Game } from './game/engine';
+import { COLS, HIDDEN_ROWS, type Game, type ClearedRow } from './game/engine';
 import { cells, COLORS, type PieceType } from './game/pieces';
+import { LineAnimation } from './line-animation';
 
 function context(canvas: HTMLCanvasElement): CanvasRenderingContext2D {
   const value = canvas.getContext('2d');
@@ -23,6 +24,7 @@ export class Renderer {
   private ctx: CanvasRenderingContext2D;
   private size = 300;
   private dpr = 1;
+  private lineAnimation = new LineAnimation();
   constructor(private readonly canvas: HTMLCanvasElement, private readonly next: HTMLCanvasElement, private readonly hold: HTMLCanvasElement) {
     this.ctx = context(canvas);
     new ResizeObserver(() => this.resize()).observe(canvas.parentElement!.parentElement!);
@@ -30,6 +32,7 @@ export class Renderer {
     this.resize();
   }
   private resize(): void {
+    this.cancelLineAnimation();
     this.dpr = Math.min(window.devicePixelRatio || 1, 3);
     const wrap = this.canvas.parentElement!;
     const stage = wrap.parentElement!;
@@ -42,7 +45,9 @@ export class Renderer {
     this.canvas.width = Math.round(this.size * this.dpr);
     this.canvas.height = this.canvas.width * 2;
   }
-  draw(game: Game, welcome: boolean): void {
+  animateLines(rows: ClearedRow[]): void { this.lineAnimation.start(rows, performance.now()); }
+  cancelLineAnimation(): void { this.lineAnimation.cancel(); }
+  draw(game: Game, welcome: boolean, now: number): void {
     const ctx = this.ctx;
     const unit = this.size / COLS;
     const scale = this.canvas.width / this.size;
@@ -56,6 +61,8 @@ export class Renderer {
       pattern.forEach((row, y) => [...row].forEach((type, x) => { if (type !== '0') tile(ctx, x * unit, y * unit, unit, COLORS[type as PieceType]); }));
     } else {
       game.state.board.slice(HIDDEN_ROWS).forEach((row, y) => row.forEach((type, x) => { if (type) tile(ctx, x * unit, y * unit, unit, COLORS[type]); }));
+      // Paint feedback beneath the ghost and active piece so play remains readable.
+      this.drawLineAnimation(unit, now);
       if (game.state.status !== 'over') {
         for (const [x, y] of cells(game.ghost())) if (y >= HIDDEN_ROWS) tile(ctx, x * unit, (y - HIDDEN_ROWS) * unit, unit, COLORS[game.state.active.type], true);
         for (const [x, y] of cells(game.state.active)) if (y >= HIDDEN_ROWS) tile(ctx, x * unit, (y - HIDDEN_ROWS) * unit, unit, COLORS[game.state.active.type]);
@@ -63,6 +70,26 @@ export class Renderer {
     }
     this.preview(this.next, game.state.next, 'Siguiente pieza');
     this.preview(this.hold, game.state.hold, 'Pieza reservada');
+  }
+  private drawLineAnimation(unit: number, now: number): void {
+    const effect = this.lineAnimation.sample(now);
+    if (!effect) return;
+    const ctx = this.ctx, p = effect.progress;
+    const fade = (1 - p) ** 2;
+    const size = unit * (1 - p * .45), inset = (unit - size) / 2;
+    ctx.save();
+    for (const row of effect.rows) {
+      const y = (row.index - HIDDEN_ROWS) * unit;
+      ctx.globalAlpha = .8 * fade;
+      row.cells.forEach((type, x) => tile(ctx, x * unit + inset, y + inset, size, COLORS[type]));
+      ctx.globalAlpha = .28 * fade;
+      ctx.fillStyle = '#d5efa0';
+      ctx.fillRect(0, y + unit * .12, this.size, unit * .76);
+      ctx.globalAlpha = .6 * fade;
+      const width = this.size * (.3 + p * .7);
+      ctx.fillRect((this.size - width) / 2, y + unit / 2, width, Math.max(1, unit * .045));
+    }
+    ctx.restore();
   }
   private preview(canvas: HTMLCanvasElement, type: PieceType | null, label: string): void {
     const ctx = context(canvas);

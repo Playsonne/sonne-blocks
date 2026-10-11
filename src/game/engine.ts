@@ -7,6 +7,7 @@ export const LOCK_DELAY = 500;
 export const MAX_LOCK_RESETS = 15;
 export type Status = 'paused' | 'playing' | 'over';
 export type Action = 'left' | 'right' | 'down' | 'cw' | 'ccw' | 'drop' | 'hold';
+export interface ClearedRow { index: number; cells: PieceType[] }
 export interface GameState {
   board: Cell[][];
   active: Piece;
@@ -27,10 +28,15 @@ export const spawn = (type: PieceType): Piece => ({ type, x: 3, y: type === 'I' 
 export function collides(board: Cell[][], piece: Piece): boolean {
   return cells(piece).some(([x, y]) => x < 0 || x >= COLS || y < 0 || y >= ROWS || board[y][x] !== null);
 }
-export function clearLines(board: Cell[][]): { board: Cell[][]; cleared: number } {
-  const remaining = board.filter(row => row.some(cell => cell === null));
+export function clearLines(board: Cell[][]): { board: Cell[][]; cleared: number; rows: ClearedRow[] } {
+  const rows: ClearedRow[] = [];
+  const remaining = board.filter((row, index) => {
+    if (row.some(cell => cell === null)) return true;
+    rows.push({ index, cells: row.slice() as PieceType[] });
+    return false;
+  });
   const cleared = ROWS - remaining.length;
-  return { board: [...Array.from({ length: cleared }, () => Array<Cell>(COLS).fill(null)), ...remaining], cleared };
+  return { board: [...Array.from({ length: cleared }, () => Array<Cell>(COLS).fill(null)), ...remaining], cleared, rows };
 }
 export const gravityInterval = (level: number): number => Math.max(65, 900 * Math.pow(0.8, level - 1));
 
@@ -38,6 +44,8 @@ export class Game {
   state: GameState;
   locks = 0;
   lastClear = 0;
+  // Transient visual event: original rows and colors, never part of a saved game.
+  lastClearedRows: ClearedRow[] = [];
   // Time actually simulated in this instance; excludes pauses and unused time after game over.
   elapsedMs = 0;
   constructor(private readonly random = Math.random, saved?: GameState) {
@@ -107,6 +115,7 @@ export class Game {
     const occupied = cells(s.active);
     for (const [x, y] of occupied) s.board[y][x] = s.active.type;
     this.locks++;
+    this.lastClearedRows = [];
     // A piece locked entirely above the visible playfield ends the game.
     if (occupied.every(([, y]) => y < HIDDEN_ROWS)) {
       s.status = 'over';
@@ -115,6 +124,7 @@ export class Game {
     }
     const result = clearLines(s.board);
     this.lastClear = result.cleared;
+    this.lastClearedRows = result.rows;
     s.board = result.board;
     s.score += [0, 100, 300, 500, 800][result.cleared] * s.level;
     s.lines += result.cleared;
