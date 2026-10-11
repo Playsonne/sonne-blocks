@@ -2,6 +2,8 @@
 
 Un juego de bloques para navegador, hecho con TypeScript, Vite y Canvas 2D. Interfaz en español, diseño oscuro y controles pensados para móvil en vertical. Sin cuentas, servidor de aplicación, anuncios, compras, sonido ni dependencias externas durante el juego.
 
+**[Jugar a Sonne Blocks](https://playsonne.github.io/sonne-blocks/)** · Puedes compartir este enlace; no hace falta una cuenta de GitHub.
+
 ## Empezar
 
 Requiere **Node.js 22.12 o posterior** y npm. Desde esta carpeta:
@@ -112,7 +114,7 @@ Un navegador o el sistema operativo puede borrar cachés por falta de espacio; e
 
 ## Raíz de dominio o subcarpeta
 
-**El juego no se ha desplegado como web.** El repositorio conserva el código fuente; `dist/` se genera localmente y contiene los archivos listos para alojar cuando se decida hacerlo.
+El juego se publica en **https://playsonne.github.io/sonne-blocks/** mediante GitHub Pages. El repositorio es público y conserva el código fuente. El flujo `.github/workflows/pages.yml` ejecuta las pruebas unitarias, compila y publica únicamente `dist/` al subir cambios a `main`; también admite ejecución manual desde Actions. Un fallo en las pruebas o la compilación impide ese despliegue.
 
 La configuración predeterminada `base: './'` genera rutas relativas y permite servir el mismo resultado en la raíz o una subcarpeta. Accede a la carpeta con barra final, por ejemplo `/TETRIS/`, o configura la redirección de `/TETRIS` a `/TETRIS/` en el alojamiento.
 
@@ -134,7 +136,7 @@ Si usas `.env.production.local`, `preview` lee la misma configuración de produc
 
 El manifest usa `start_url`, `scope`, `id` e iconos relativos a su ubicación. El registro del service worker sigue la base de Vite; sus recursos y su caché se delimitan al ámbito de esa instalación. No hace falta un servidor de aplicación ni reescrituras de rutas: hay una sola página.
 
-Para GitHub Pages, el resultado que se alojaría es el **contenido de `dist/`**, no el código TypeScript. No hay automatización de publicación ni despliegue configurada. Utiliza HTTPS en producción; `localhost` o `127.0.0.1` sirven para pruebas locales. Una URL HTTP con la IP de la red local permite probar la interfaz, pero normalmente **no** el service worker ni la instalación.
+GitHub Pages aloja el **contenido de `dist/`**, con rutas relativas que funcionan bajo `/sonne-blocks/`. Utiliza HTTPS en producción; `localhost` o `127.0.0.1` sirven para pruebas locales. Una URL HTTP con la IP de la red local permite probar la interfaz, pero normalmente **no** el service worker ni la instalación.
 
 Referencias técnicas: [base y alojamiento estático de Vite](https://vite.dev/guide/static-deploy.html), [service workers](https://developer.mozilla.org/en-US/docs/Web/API/Service_Worker_API/Using_Service_Workers) e [instalación de PWA](https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps/Guides/Making_PWAs_installable).
 

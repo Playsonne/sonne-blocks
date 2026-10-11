@@ -1,6 +1,6 @@
 # Validación de Sonne Blocks
 
-Comprobaciones actualizadas el **11 de octubre de 2026** tras añadir la versión visible para diagnosticar las actualizaciones y el zoom comunicado por el usuario, en Windows con Node.js 22.12.0 y Microsoft Edge 155.0.4283.45 (Chromium), mediante Playwright. No se ha publicado ni desplegado el proyecto.
+Comprobaciones actualizadas el **11 de octubre de 2026** tras añadir la versión visible para diagnosticar las actualizaciones y el zoom comunicado por el usuario, en Windows con Node.js 22.12.0 y Microsoft Edge 155.0.4283.45 (Chromium), mediante Playwright. Estos resultados corresponden a la validación local previa a la primera publicación en GitHub Pages.
 
 ## Resultado
 
