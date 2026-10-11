@@ -110,6 +110,15 @@ test('la ayuda conserva scroll táctil y texto ampliado; el viewport permite zoo
   for (const selector of ['html', 'body', '.game', '.board-wrap', '#help-dialog']) {
     expect(await page.locator(selector).evaluate(el => getComputedStyle(el).touchAction)).toBe('auto');
   }
+  // All dialogs remain outside the zoom-restricted game shell. An auto value on
+  // a dialog alone would not override a restricted ancestor.
+  for (const selector of ['#help-dialog', '#install-dialog', '#restart-dialog', '#gesture-dialog']) {
+    expect(await page.locator(selector).evaluate(el => {
+      const chain: string[] = [];
+      for (let node: Element | null = el; node; node = node.parentElement) chain.push(getComputedStyle(node).touchAction);
+      return chain;
+    })).toEqual(['auto', 'auto', 'auto']);
+  }
   const point = await center(page, '#help-dialog');
   await swipe(page, session, point, -120);
   expect(await help.evaluate(el => el.scrollTop)).toBeGreaterThan(0);
@@ -123,4 +132,90 @@ test('la ayuda conserva scroll táctil y texto ampliado; el viewport permite zoo
   await page.getByRole('radio', { name: 'Botones', exact: true }).check();
   await expect(page.getByRole('radio', { name: 'Botones', exact: true })).toBeChecked();
   await help.locator('.primary').scrollIntoViewIfNeeded(); await expect(help.locator('.primary')).toBeInViewport();
+});
+
+type InactiveScreen = 'welcome' | 'paused' | 'over';
+async function tapAfterScrolling(page: Page, selector: string) {
+  await page.locator(selector).scrollIntoViewIfNeeded();
+  // CDP touch swipes can leave inertial scrolling active after touchEnd. Wait
+  // for both page and overlay to settle before testing a separate activation.
+  await page.evaluate(() => new Promise<void>(resolve => {
+    let last = '', stableFrames = 0;
+    const frame = () => {
+      const position = `${scrollY}:${document.querySelector('#overlay')!.scrollTop}`;
+      stableFrames = position === last ? stableFrames + 1 : 0; last = position;
+      if (stableFrames >= 8) resolve(); else requestAnimationFrame(frame);
+    };
+    requestAnimationFrame(frame);
+  }));
+  await page.locator(selector).tap();
+}
+async function inactive(page: Page, screen: InactiveScreen, mode: 'buttons' | 'gestures' = 'buttons') {
+  const state = new Game(() => .4).snapshot();
+  if (screen === 'over') { state.active = { type: 'I', rotation: 0, x: 3, y: 0 }; state.board[2][3] = 'T'; }
+  await page.addInitScript(({ screen, mode, state, save, prefs }) => {
+    if (screen !== 'welcome') localStorage.setItem(save, JSON.stringify({ version: 1, state }));
+    localStorage.setItem(prefs, JSON.stringify({ version: 1, mode, gesturesExplained: true }));
+  }, { screen, mode, state, save: SAVE_KEY, prefs: PREFERENCES_KEY });
+  await page.goto('/');
+  if (screen === 'over') { await page.locator('#play').tap(); await page.keyboard.press('Space'); }
+  await expect(page.locator('html')).toHaveAttribute('data-game-status', screen);
+  return page.context().newCDPSession(page);
+}
+
+for (const mode of ['buttons', 'gestures'] as const) for (const screen of ['welcome', 'paused', 'over'] as const) {
+  test(`${mode}, ${screen}: cabecera y tablero restringen zoom sin activar ni alterar la partida`, async ({ page }) => {
+    const session = await inactive(page, screen, mode), before = await viewport(page);
+    const saved = await page.evaluate(key => localStorage.getItem(key), SAVE_KEY);
+    await expect(page.locator('.app')).toHaveCSS('touch-action', 'pan-y');
+    // Zoom policy follows ancestors all the way to the document, including
+    // nested scroll containers (overlay and board wrapper). No pinch-zoom allowed.
+    for (const selector of ['.brand', '.scoreboard', '.previews', '#overlay', '#play', '.controls']) {
+      expect(await page.locator(selector).evaluate(el => {
+        for (let node: Element | null = el; node; node = node.parentElement) {
+          if (['none', 'pan-y'].includes(getComputedStyle(node).touchAction)) return true;
+        }
+        return false;
+      })).toBe(true);
+    }
+    const board = (await page.locator('#board').boundingBox())!;
+    const points = [{ x: 215, y: 25 }, await center(page, '.scoreboard'), { x: board.x + board.width / 2, y: board.y + 20 }];
+    for (const point of points) {
+      await pinch(page, session, point);
+      for (let tap = 0; tap < 2; tap++) {
+        await send(session, 'touchStart', [{ ...point, id: 1 }]); await send(session, 'touchEnd', []); await page.waitForTimeout(45);
+      }
+      expect(await viewport(page)).toEqual(before);
+    }
+    await expect(page.locator('html')).toHaveAttribute('data-game-status', screen);
+    expect(await page.evaluate(key => localStorage.getItem(key), SAVE_KEY)).toBe(saved);
+    await page.locator('#help').tap(); await expect(page.locator('#help-dialog')).toBeVisible();
+    await page.locator('#help-dialog .primary').tap(); await page.locator('#play').tap();
+    await expect(page.locator('html')).toHaveAttribute('data-game-status', 'playing');
+    await page.keyboard.press('Escape'); await expect(page.locator('html')).toHaveAttribute('data-game-status', 'paused');
+  });
+}
+
+for (const screen of ['welcome', 'paused', 'over'] as const) {
+  test(`${screen}: poca altura permite desplazar la página con el dedo fuera de la partida`, async ({ page }) => {
+    await page.setViewportSize({ width: 360, height: 400 });
+    const session = await inactive(page, screen);
+    await page.evaluate(() => window.scrollTo(0, 0));
+    expect(await page.evaluate(() => document.documentElement.scrollHeight)).toBeGreaterThan(400);
+    await swipe(page, session, await center(page, '.scoreboard'), -65);
+    expect((await viewport(page)).y).toBeGreaterThan(0);
+    await tapAfterScrolling(page, '#play'); await expect(page.locator('html')).toHaveAttribute('data-game-status', 'playing');
+  });
+}
+
+test('resumen con texto al 200 %: scroll táctil dentro del tablero hasta Volver a jugar', async ({ page }) => {
+  await page.setViewportSize({ width: 360, height: 400 }); const session = await inactive(page, 'over');
+  await page.addStyleTag({ content: 'html { font-size: 200%; }' });
+  const overlay = page.locator('#overlay');
+  await overlay.evaluate(el => el.scrollIntoView({ block: 'start' }));
+  expect(await overlay.evaluate(el => el.scrollHeight)).toBeGreaterThan(await overlay.evaluate(el => el.clientHeight));
+  await swipe(page, session, { x: 180, y: 300 }, -160);
+  expect(await overlay.evaluate(el => el.scrollTop)).toBeGreaterThan(0);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(360);
+  await tapAfterScrolling(page, '#play'); await expect(page.locator('html')).toHaveAttribute('data-game-status', 'playing');
 });

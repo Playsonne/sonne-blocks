@@ -1,5 +1,19 @@
 # Corrección del zoom accidental
 
+## v1.3.1 · Bienvenida, pausa y final de partida
+
+Cambio del **12 de octubre de 2026**, solicitado tras la prueba del usuario. La pantalla principal (`.app`) declara ahora **`touch-action: pan-y`**: permite el desplazamiento vertical necesario con poca altura o texto ampliado y excluye el zoom táctil, también sobre la cabecera, estadísticas y pantallas de bienvenida, pausa y fin de partida. Durante el juego se conservan las reglas más restrictivas (`none`) de `.game` y `.board-wrap`.
+
+Es una única declaración CSS nueva. No se cambian los eventos ni los umbrales de Gestos, las acciones multitáctiles de Botones, el viewport o las reglas del juego. Ayuda, ajustes, instalación y confirmaciones son diálogos hermanos de `.app`, no descendientes: tanto ellos como todos sus antecesores conservan `touch-action: auto`. La pantalla principal no limita el zoom dentro de esos diálogos.
+
+La política de zoom se evalúa desde el elemento tocado hasta el documento, incluso cuando existen contenedores de desplazamiento intermedios. Por eso basta el contenedor `.app` para esta ampliación; el scroll interno del resumen y el de la página en pausa siguen disponibles. [Especificación de Pointer Events](https://www.w3.org/TR/pointerevents3/#determining-supported-direct-manipulation-behavior).
+
+Las comprobaciones nuevas cubren las tres pantallas en Botones y Gestos, contactos de pellizco/doble toque sin acciones inesperadas ni cambios en el guardado, regreso al juego, scroll vertical real mediante entrada táctil emulada a 360 × 400 y desplazamiento interno del resumen con texto al 200 %. Se mantiene la comprobación de ayuda desplazable y ampliable, y se revisa toda su cadena de antecesores.
+
+**Límite de la emulación:** el navegador de pruebas tampoco amplía al pellizcar la ayuda libre de restricciones. La escala estable no prueba el bloqueo nativo en Android/iOS; sí se verifican la política CSS, el comportamiento de los controles y el scroll táctil. En el Xiaomi 14 y en Safari/iOS queda comprobar el pellizco y doble toque en bienvenida, pausa y resumen, además del zoom dentro de Ayuda. No se interceptan gestos del sistema ni se impone un límite global de escala.
+
+## Historial: restricción durante la partida (v1.0.1)
+
 Cambio local del 11 de octubre de 2026. El usuario confirmó previamente el buen funcionamiento de los gestos en su Xiaomi 14. Esta corrección no modifica su sensibilidad ni su reconocimiento. Sin publicación ni despliegue.
 
 ## Causa localizada y cambio

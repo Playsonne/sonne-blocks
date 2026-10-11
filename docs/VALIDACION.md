@@ -1,5 +1,15 @@
 # Validación de Sonne Blocks
 
+## v1.3.1 · Restricción de zoom fuera de la partida
+
+Validación del **12 de octubre de 2026**, en Windows y Microsoft Edge mediante Playwright: **98 pruebas unitarias, 100 de navegador y compilación correctas**. Se añaden diez comprobaciones de navegador y se conserva la batería anterior. El cambio de funcionamiento consiste en una declaración CSS sobre `.app`; no se modifican la lógica, controles, gestos, sonido, animación, persistencia o PWA.
+
+- Bienvenida, pausa y fin de partida, en Botones y Gestos: política de zoom restringida desde cabecera, estadísticas, vistas previas, tablero y botones. Contactos de pellizco y doble toque emulados no activan acciones ni alteran el guardado; abrir/cerrar ayuda, empezar/continuar y volver a pausar siguen funcionando.
+- Con 360 × 400 se verifica desplazamiento vertical táctil en las tres pantallas. El resumen con texto al 200 % permite desplazar su contenido hasta Volver a jugar y activarlo. Las pruebas esperan a que termine el desplazamiento antes de comprobar una pulsación independiente; una primera ejecución perdió un toque tras el desplazamiento emulado.
+- Ayuda y todos los diálogos conservan `touch-action: auto` en toda su cadena de antecesores. Se mantiene el scroll táctil de ayuda, texto ampliado, selector de controles y viewport sin límites de escala. Durante la partida siguen pasando las comprobaciones de dos giros para dos toques, arrastres, caída única y Botones multitáctil.
+
+**El zoom nativo necesita comprobación física en Android/iOS.** La emulación tampoco amplía al pellizcar la ayuda sin restricciones; por eso la escala estable no se presenta como prueba del bloqueo real. Se han comprobado política CSS, contactos, acciones, scroll y conservación del estado. Detalles y comprobaciones para el Xiaomi 14: [Zoom móvil](ZOOM-MOVIL.md).
+
 ## v1.3.0 · Sonido opcional
 
 Validación del **11 de octubre de 2026**, en Windows y Microsoft Edge mediante Playwright: **98 pruebas unitarias, 90 de navegador y compilación de producción correctas**. Se añaden 13 pruebas unitarias y 20 de navegador; se conservan todas las comprobaciones anteriores. No se modifican el motor, el guardado de partida, el reconocedor de gestos, los controles ni las restricciones táctiles.

@@ -28,6 +28,9 @@ a { color: inherit; }
 
 /* With large text or little height, the main track grows and the page scrolls. */
 .app {
+  /* No pinch/double-tap zoom in any game screen. Keep vertical scrolling for
+     short screens/large text. Dialogs are siblings of .app, so remain zoomable. */
+  touch-action: pan-y;
   max-width: 1240px;
   height: 100vh;
   height: 100dvh;
@@ -76,7 +79,7 @@ html[data-game-status="welcome"] .intro { display: block; }
 html[data-game-status="welcome"] .game { width: 100%; }
 /* Protect the whole play surface, including Reserve and the gaps between controls,
    in both modes. The board's overflow:hidden wrapper is a separate scroll container,
-   so it also needs the policy. Dialogs live outside .game; pause restores scrolling.
+   so it also needs the policy. Outside play, .app allows scrolling but not zoom.
    Declare this before contact: canceling Pointer Events alone cannot stop UA zoom. */
 html[data-game-status="playing"] .game,
 html[data-game-status="playing"] .board-wrap { touch-action: none; }
