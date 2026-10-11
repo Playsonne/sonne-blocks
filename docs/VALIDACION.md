@@ -1,5 +1,13 @@
 # Validación de Sonne Blocks
 
+## v1.2.1 · Animación más visible
+
+El usuario indicó que el efecto de la v1.2.0 apenas se percibía. Se amplía de **260 a 520 ms**, mantiene un destello inicial durante unos **100 ms** y después reduce gradualmente los bloques con pequeños fragmentos de sus colores. El destello se limita a las filas completadas y no se repite. Se conserva la opción de desactivarlo, la reducción de movimiento y la respuesta inmediata de la siguiente pieza.
+
+Validación del **11 de octubre de 2026** en Windows y Microsoft Edge mediante Playwright: **85 pruebas unitarias, 70 de navegador y compilación correctas**. Las comprobaciones de una y cuatro filas ahora exigen un destello inicial luminoso y opaco, un efecto todavía visible a los 320 ms y su desaparición después de los 520 ms. Se mantienen las comprobaciones de movimiento durante el efecto, cancelación, preferencia, offline, Botones y Gestos.
+
+Capturas de móvil **emulado a 390 × 844**: [destello de una fila](animacion-fila-visible.png) y [fragmentos a los 320 ms](animacion-fragmentos.png). No se ha probado esta revisión en un dispositivo físico; su percepción en el Xiaomi 14 queda pendiente del usuario.
+
 ## v1.2.0 · Animación opcional de filas
 
 Validado el **11 de octubre de 2026** en Windows y Microsoft Edge mediante Playwright: **85 pruebas unitarias y 70 pruebas de navegador aprobadas**, además de la compilación de producción. Son seis pruebas unitarias y nueve de navegador adicionales; se mantienen las comprobaciones anteriores de controles, gestos, multitáctil, guardado, actualización y funcionamiento offline.

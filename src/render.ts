@@ -75,19 +75,36 @@ export class Renderer {
     const effect = this.lineAnimation.sample(now);
     if (!effect) return;
     const ctx = this.ctx, p = effect.progress;
-    const fade = (1 - p) ** 2;
-    const size = unit * (1 - p * .45), inset = (unit - size) / 2;
+    // Hold the first flash for ~100 ms, then dissolve. An immediate quadratic
+    // fade made the old 260 ms effect practically invisible during normal play.
+    const dissolve = Math.max(0, (p - .2) / .8);
+    const fade = 1 - dissolve;
+    const size = unit * (1 - dissolve * .7), inset = (unit - size) / 2;
     ctx.save();
     for (const row of effect.rows) {
       const y = (row.index - HIDDEN_ROWS) * unit;
-      ctx.globalAlpha = .8 * fade;
+      ctx.globalAlpha = .95 * fade;
       row.cells.forEach((type, x) => tile(ctx, x * unit + inset, y + inset, size, COLORS[type]));
-      ctx.globalAlpha = .28 * fade;
-      ctx.fillStyle = '#d5efa0';
-      ctx.fillRect(0, y + unit * .12, this.size, unit * .76);
-      ctx.globalAlpha = .6 * fade;
-      const width = this.size * (.3 + p * .7);
-      ctx.fillRect((this.size - width) / 2, y + unit / 2, width, Math.max(1, unit * .045));
+      // A single bright pulse, confined to the completed rows; no repeated flash.
+      ctx.globalAlpha = .65 * fade;
+      ctx.fillStyle = '#f2ffda';
+      ctx.fillRect(0, y + unit * .08, this.size, unit * .84);
+      ctx.globalAlpha = fade;
+      ctx.fillRect(0, y + unit * .43, this.size, Math.max(2, unit * .14));
+      if (dissolve > 0) {
+        // Small colored fragments make the break-up readable even for one row.
+        // Deterministic positions avoid flicker and extra animation timers.
+        row.cells.forEach((type, x) => {
+          ctx.fillStyle = COLORS[type];
+          ctx.globalAlpha = fade * .9;
+          const chip = unit * (.18 - dissolve * .08);
+          for (const direction of [-1, 1]) {
+            const cx = (x + .5) * unit + direction * unit * (.12 + dissolve * .38);
+            const cy = y + unit * .5 + direction * unit * (.1 + dissolve * .6);
+            ctx.fillRect(cx - chip / 2, cy - chip / 2, chip, chip);
+          }
+        });
+      }
     }
     ctx.restore();
   }

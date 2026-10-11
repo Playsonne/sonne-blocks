@@ -1,6 +1,6 @@
 import { HIDDEN_ROWS, ROWS, type ClearedRow } from './game/engine';
 
-export const LINE_ANIMATION_MS = 260;
+export const LINE_ANIMATION_MS = 520;
 
 /** One bounded visual effect. It never delays or changes the game state. */
 export class LineAnimation {

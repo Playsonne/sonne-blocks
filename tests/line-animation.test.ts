@@ -9,13 +9,13 @@ it('captura las filas originales, aunque no sean consecutivas, con sus colores a
   expect(result.cleared).toBe(2); expect(result.board[18][0]).toBe('T');
   board[21][0] = 'Z'; expect(result.rows[1].cells[0]).toBe('I');
 });
-it('el efecto dura 260 ms, solo incluye filas visibles y no conserva referencias al tablero', () => {
+it('el efecto dura 520 ms, solo incluye filas visibles y no conserva referencias al tablero', () => {
   const effect = new LineAnimation();
   const rows: ClearedRow[] = [1, 18, 19, 20, 21].map(index => ({ index, cells: Array(10).fill('I') }));
   effect.start(rows, 1000); rows[1].cells[0] = 'Z';
   expect(effect.sample(1000)?.rows.map(row => row.index)).toEqual([18, 19, 20, 21]);
   expect(effect.sample(1000)?.rows[0].cells[0]).toBe('I');
-  expect(effect.sample(1130)?.progress).toBe(.5);
+  expect(effect.sample(1260)?.progress).toBe(.5);
   expect(effect.sample(1000 + LINE_ANIMATION_MS)).toBeUndefined();
   expect(effect.sample(1100)).toBeUndefined();
 });

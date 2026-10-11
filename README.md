@@ -69,9 +69,9 @@ En **? → Vibración** puedes activar la respuesta táctil y pulsar **Probar vi
 
 Se usa la [API de vibración del navegador](https://developer.mozilla.org/en-US/docs/Web/API/Navigator/vibrate): su presencia no garantiza que el dispositivo tenga motor o que sus ajustes permitan vibrar. Si falta, los ajustes lo indican y el juego continúa funcionando. Las pruebas automáticas comprueban las llamadas, su preferencia y sus cancelaciones; la sensación e intensidad reales requieren probarlo en el móvil. El sonido queda para una mejora posterior.
 
-### Animación opcional de filas (v1.2.0)
+### Animación opcional de filas (v1.2.1)
 
-En **? → Animación de filas** puedes activar o desactivar un brillo suave con contracción y desvanecimiento de los bloques completados. Dura **260 ms**, conserva sus colores y se dibuja debajo de la pieza activa y la sombra. Las filas se eliminan y puntúan inmediatamente; la animación no retrasa la pieza siguiente ni bloquea los controles.
+En **? → Animación de filas** puedes activar o desactivar un destello con contracción y fragmentos de los bloques completados. Dura **520 ms**: mantiene el brillo inicial durante unos **100 ms** y después se desvanece gradualmente. Se limita a las filas completadas, conserva sus colores y se dibuja debajo de la pieza activa y la sombra. Las filas se eliminan y puntúan inmediatamente; la animación no retrasa la pieza siguiente ni bloquea los controles. La versión 1.2.1 aumenta su visibilidad respecto al efecto de 260 ms de la 1.2.0, sin añadir destellos repetidos.
 
 Está activada inicialmente y guarda tu elección sin cambiar Botones/Gestos ni la vibración. Si el sistema solicita **reducir movimiento**, se desactiva y la ayuda explica por qué; al retirar esa preferencia vuelve a respetar tu elección anterior. Con la animación apagada, el aviso de líneas sigue apareciendo como texto estático.
 

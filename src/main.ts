@@ -180,7 +180,7 @@ function renderAnimationPreference(): void {
   document.documentElement.dataset.lineAnimation = String(enabled);
   $('#line-animation-note').textContent = reducedMotion.matches
     ? 'Desactivada porque tienes configurada la reducción de movimiento.'
-    : 'Brillo y desvanecimiento breves al completar filas. La siguiente pieza sigue su ritmo.';
+    : 'Destello y fragmentos de color al completar filas. La siguiente pieza sigue su ritmo.';
   if (!enabled) renderer.cancelLineAnimation();
 }
 $('#line-animation').addEventListener('change', () => {

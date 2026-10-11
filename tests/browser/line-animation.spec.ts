@@ -29,12 +29,13 @@ async function clear(page: Page) {
   await page.keyboard.press('Space');
   await page.clock.runFor(64);
 }
-async function bottomAlpha(page: Page) {
+async function bottomPixel(page: Page) {
   return page.locator('#board').evaluate((canvas: HTMLCanvasElement) => {
     // A cleared cell away from both the new piece and its ghost, and away from grid lines.
-    return canvas.getContext('2d')!.getImageData(Math.floor(canvas.width * .15), Math.floor(canvas.height * .975), 1, 1).data[3];
+    return Array.from(canvas.getContext('2d')!.getImageData(Math.floor(canvas.width * .15), Math.floor(canvas.height * .975), 1, 1).data);
   });
 }
+const bottomAlpha = async (page: Page) => (await bottomPixel(page))[3];
 const state = (page: Page) => page.evaluate(key => JSON.parse(localStorage.getItem(key)!).state, SAVE_KEY);
 
 for (const count of [1, 4]) {
@@ -42,12 +43,17 @@ for (const count of [1, 4]) {
     await load(page, { count }); await clear(page);
     await expect(page.locator('#lines')).toHaveText(String(6 + count));
     await expect(page.locator('#score')).toHaveText(count === 4 ? '800' : '100');
-    expect(await bottomAlpha(page)).toBeGreaterThan(0);
+    // The initial flash must be bright and opaque, including a single-row clear.
+    const pixel = await bottomPixel(page);
+    expect(pixel[1]).toBeGreaterThan(230); expect(pixel[3]).toBeGreaterThan(240);
     const locked = await state(page);
     expect(locked.active.type).toBe('T'); expect(locked.active.x).toBe(3);
     expect(locked).not.toHaveProperty('lastClearedRows');
-    if (count === 4) await page.screenshot({ path: 'test-results/animacion-filas-movil.png' });
+    await page.screenshot({ path: `test-results/animacion-${count}-filas-destello.png` });
     await page.keyboard.press('ArrowLeft');
+    await page.clock.runFor(256); expect(await bottomAlpha(page)).toBeGreaterThan(120);
+    // It remains clearly visible beyond the entire duration of the previous effect.
+    await page.screenshot({ path: `test-results/animacion-${count}-filas-fragmentos.png` });
     await page.clock.runFor(240); expect(await bottomAlpha(page)).toBe(0);
     await page.keyboard.press('Escape');
     expect((await state(page)).active.x).toBe(2);
